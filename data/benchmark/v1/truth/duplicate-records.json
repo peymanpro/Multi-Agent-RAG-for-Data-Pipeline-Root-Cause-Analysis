@@ -1,0 +1,6 @@
+{
+  "case_id": "duplicate-records-001",
+  "expected_fault_classes": ["duplicate_records"],
+  "expected_finding_codes": ["DATASET_DUPLICATE_KEYS"],
+  "expected_affected_nodes": []
+}
