@@ -9,9 +9,10 @@ from pathlib import Path
 from typing import Any
 
 from pipeline_rca.retrieval.corpus import MarkdownCorpus
+from pipeline_rca.retrieval.models import RetrievalHit
 
 
-def hits_to_dict(hits: tuple[Any, ...]) -> list[dict[str, Any]]:
+def hits_to_dict(hits: tuple[RetrievalHit, ...]) -> list[dict[str, Any]]:
     """Convert ranked hits into stable JSON-compatible records."""
     return [
         {
