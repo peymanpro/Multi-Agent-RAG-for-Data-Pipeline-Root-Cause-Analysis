@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Stage: deterministic diagnostics, synthetic benchmark v1, lexical retrieval, bounded multi-agent investigation, and offline baseline evaluation are implemented. The v0.2.0 release candidate includes automatic GitHub Release packaging; publication occurs only after merge and a successful release workflow.** The default path runs offline; model-assisted generation and review are explicit opt-ins. A feature is considered complete only after CI and its acceptance tests pass.
+**Release candidate v0.2.0.** The default workflow is deterministic and offline; hosted chat and hybrid embeddings are opt-in. The release workflow validates code, tests, package artifacts, and metadata before creating a versioned GitHub Release. The default path runs offline; model-assisted generation and review are explicit opt-ins. A feature is considered complete only after CI and its acceptance tests pass.
 
 ## Problem
 
