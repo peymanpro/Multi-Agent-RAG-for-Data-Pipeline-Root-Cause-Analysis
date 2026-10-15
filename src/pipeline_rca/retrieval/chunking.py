@@ -7,7 +7,7 @@ import re
 
 from pipeline_rca.retrieval.models import Document, DocumentChunk
 
-_HEADING = re.compile(r"^(#{1,6})\\s+(.+?)\\s*#*\\s*$")
+_HEADING = re.compile(r"^(#{1,6})\s+(.+?)\s*#*\s*$")
 
 
 def _split_text(text: str, max_chars: int) -> list[str]:
@@ -35,7 +35,7 @@ def _split_text(text: str, max_chars: int) -> list[str]:
 
 
 def _stable_id(*parts: str) -> str:
-    digest = hashlib.sha256("\\x1f".join(parts).encode("utf-8")).hexdigest()
+    digest = hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()
     return f"chunk-{digest[:20]}"
 
 
@@ -59,7 +59,7 @@ def chunk_document(document: Document, *, max_chars: int = 900) -> tuple[Documen
     def flush_paragraph() -> None:
         nonlocal paragraph_lines
         if paragraph_lines:
-            text = "\\n".join(line for _, line in paragraph_lines).strip()
+            text = "\n".join(line for _, line in paragraph_lines).strip()
             if text:
                 blocks.append(
                     (
