@@ -78,3 +78,32 @@ def test_embedding_adapter_enforces_batch_limits_and_configuration() -> None:
     )
     with pytest.raises(ValueError, match="maximum"):
         provider.embed_texts(("one", "two"))
+
+
+def test_embedding_cache_namespace_is_opaque_and_partitions_configuration() -> None:
+    first = OpenAICompatibleEmbeddingProvider(
+        api_key="secret-key-one",
+        model="embedding-model-a",
+        base_url="https://provider.example/v1",
+    )
+    same = OpenAICompatibleEmbeddingProvider(
+        api_key="secret-key-one",
+        model="embedding-model-a",
+        base_url="https://provider.example/v1",
+    )
+    different_model = OpenAICompatibleEmbeddingProvider(
+        api_key="secret-key-one",
+        model="embedding-model-b",
+        base_url="https://provider.example/v1",
+    )
+    different_key = OpenAICompatibleEmbeddingProvider(
+        api_key="secret-key-two",
+        model="embedding-model-a",
+        base_url="https://provider.example/v1",
+    )
+
+    assert first.cache_namespace == same.cache_namespace
+    assert first.cache_namespace != different_model.cache_namespace
+    assert first.cache_namespace != different_key.cache_namespace
+    assert "secret-key-one" not in first.cache_namespace
+    assert "embedding-model-a" not in first.cache_namespace
