@@ -98,7 +98,9 @@ class AirflowRestConnector:
             if not isinstance(page, list) or any(not isinstance(item, dict) for item in page):
                 raise ConnectorError("Airflow response omitted a valid task_instances array")
             if len(page) > limit:
-                raise ConnectorError("Airflow returned more task instances than the requested limit")
+                raise ConnectorError(
+                    "Airflow returned more task instances than the requested limit"
+                )
 
             total = page_data.get("total_entries")
             if total is not None:
