@@ -190,9 +190,15 @@ def run_retrieval_benchmark(
         "cases": case_results,
         "limitations": [
             "Relevance judgments are hand-authored for this repository's small runbook corpus.",
-            "Results evaluate lexical document retrieval only, not answer correctness or root-cause accuracy.",
+            (
+                "Results evaluate lexical document retrieval only, not answer correctness "
+                "or root-cause accuracy."
+            ),
             "Duplicate chunks from a document count only once at their best observed rank.",
-            "The corpus and relevance manifest must be versioned together; changing runbooks can change rankings.",
+            (
+                "The corpus and relevance manifest must be versioned together; changing "
+                "runbooks can change rankings."
+            ),
         ],
     }
 
