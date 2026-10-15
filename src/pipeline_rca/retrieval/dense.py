@@ -66,7 +66,7 @@ class DenseRetriever:
         batch_size: int = 64,
     ) -> DenseRetriever:
         """Embed chunks in bounded batches, retaining the original chunk order."""
-        if isinstance(batch_size, bool) or batch_size < 1:
+        if isinstance(batch_size, bool) or not isinstance(batch_size, int) or batch_size < 1:
             raise ValueError("batch_size must be positive")
         chunk_rows = tuple(chunks)
         vectors: list[tuple[float, ...]] = []
@@ -81,6 +81,11 @@ class DenseRetriever:
     def chunk_count(self) -> int:
         """Number of indexed chunks."""
         return len(self._chunks)
+
+    @property
+    def chunk_ids(self) -> tuple[str, ...]:
+        """Stable identifiers in the index insertion order."""
+        return tuple(chunk.chunk_id for chunk in self._chunks)
 
     @property
     def dimension(self) -> int:
