@@ -139,7 +139,11 @@ def _multiagent_citations(
         for evidence_id in hypothesis["supporting_evidence_ids"]:
             total += 1
             row = evidence_rows.get(evidence_id)
-            if row is not None and row["kind"] != "retrieved_document_chunk" and evidence_id in observable_evidence:
+            if (
+                row is not None
+                and row["kind"] != "retrieved_document_chunk"
+                and evidence_id in observable_evidence
+            ):
                 valid += 1
             else:
                 invalid.add(evidence_id)
@@ -153,7 +157,11 @@ def _multiagent_citations(
         for evidence_id in hypothesis["context_evidence_ids"]:
             total += 1
             row = evidence_rows.get(evidence_id)
-            if row is not None and row["kind"] == "retrieved_document_chunk" and evidence_id not in observable_evidence:
+            if (
+                row is not None
+                and row["kind"] == "retrieved_document_chunk"
+                and evidence_id not in observable_evidence
+            ):
                 valid += 1
             else:
                 invalid.add(evidence_id)
@@ -373,9 +381,18 @@ def run_investigation_benchmark(
         ),
         "cases": case_results,
         "limitations": [
-            "The baseline and multi-agent variants in this run are both deterministic and offline; no language model is evaluated.",
-            "The synthetic cases are controlled fixtures, not a representative dataset of production incidents.",
-            "Fault-class top-k measures whether a labeled fault class appears among proposed candidates; it is not proof of causal attribution.",
+            (
+                "The baseline and multi-agent variants in this run are both deterministic "
+                "and offline; no language model is evaluated."
+            ),
+            (
+                "The synthetic cases are controlled fixtures, not a representative dataset "
+                "of production incidents."
+            ),
+            (
+                "Fault-class top-k measures whether a labeled fault class appears among "
+                "proposed candidates; it is not proof of causal attribution."
+            ),
             "Evidence reference integrity checks source/type resolution, not semantic entailment.",
             "Wall-clock timings are observational and vary between runs.",
         ],
