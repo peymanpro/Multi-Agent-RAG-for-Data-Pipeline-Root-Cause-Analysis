@@ -35,7 +35,7 @@ def configure_telemetry_logging() -> logging.Logger:
     if not any(getattr(handler, "_pipeline_rca_json", False) for handler in logger.handlers):
         handler = logging.StreamHandler(sys.stdout)
         handler.setFormatter(JsonLineFormatter())
-        setattr(handler, "_pipeline_rca_json", True)
+        handler._pipeline_rca_json = True
         logger.addHandler(handler)
     return logger
 
