@@ -11,8 +11,8 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
-from starlette.middleware.base import RequestResponseEndpoint
 from pydantic import BaseModel, ConfigDict, field_validator
+from starlette.middleware.base import RequestResponseEndpoint
 
 from pipeline_rca import __version__
 from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
