@@ -22,6 +22,14 @@ from pipeline_rca.retrieval.hybrid_corpus import HybridMarkdownCorpus
 from pipeline_rca.serialization import incident_case_from_mapping
 
 
+def _default_runbooks_dir() -> Path:
+    """Prefer repository runbooks and fall back to runbooks bundled in the wheel."""
+    repository_corpus = Path("data/runbooks")
+    if repository_corpus.is_dir():
+        return repository_corpus
+    return Path(__file__).resolve().parents[1] / "resources" / "runbooks"
+
+
 def _parse_as_of(value: str) -> datetime:
     normalized = f"{value[:-1]}+00:00" if value.endswith("Z") else value
     try:
@@ -46,8 +54,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--runbooks",
         type=Path,
-        default=Path("data/runbooks"),
-        help="local Markdown runbook directory (default: data/runbooks)",
+        default=_default_runbooks_dir(),
+        help="local Markdown directory (defaults to repository or packaged runbooks)",
     )
     parser.add_argument(
         "--retrieval-mode",

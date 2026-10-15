@@ -2,24 +2,31 @@ name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
+    paths:
+      - "pyproject.toml"
+      - "CHANGELOG.md"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-main
   cancel-in-progress: false
 
 jobs:
   verify-build-release:
-    name: Verify, build, and publish GitHub Release
+    if: github.ref == 'refs/heads/main'
+    name: Verify, build, smoke-test, and publish
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
-      - name: Check out the tagged commit
+      - name: Check out the main commit
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -32,8 +39,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]" build twine
 
-      - name: Validate tag against package version
-        run: python scripts/validate_release_version.py "${GITHUB_REF_NAME}"
+      - name: Validate version and release tag
+        id: version
+        run: |
+          VERSION="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          TAG="v${VERSION}"
+          python scripts/validate_release_version.py "${TAG}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Lint
         run: ruff check .
@@ -44,11 +57,12 @@ jobs:
       - name: Test
         run: pytest -q
 
-      - name: Generate deterministic benchmark evidence
+      - name: Build deterministic evaluation evidence
         run: |
           mkdir -p release-assets
           pipeline-rca-benchmark --output release-assets/diagnostic-benchmark.json
           pipeline-rca-evaluate-retrieval --output release-assets/retrieval-benchmark.json
+          pipeline-rca-evaluate-investigation --output release-assets/investigation-benchmark.json
 
       - name: Build source and wheel distributions
         run: python -m build --outdir dist
@@ -56,32 +70,87 @@ jobs:
       - name: Validate distribution metadata
         run: python -m twine check dist/*
 
+      - name: Smoke-test wheel outside the repository
+        env:
+          WHEEL_DIR: ${{ runner.temp }}/pipeline-rca-wheel-smoke
+        run: |
+          mkdir -p "$WHEEL_DIR/site"
+          python -m pip install --no-deps --target "$WHEEL_DIR/site" dist/*.whl
+          cd "$WHEEL_DIR"
+          export PYTHONPATH="$WHEEL_DIR/site"
+          python -c 'from pathlib import Path; from pipeline_rca.agents.cli import _default_runbooks_dir; path = _default_runbooks_dir(); assert path.is_dir(), path; assert len(list(path.glob("*.md"))) >= 5, path'
+          python -m pipeline_rca.agents.cli "$GITHUB_WORKSPACE/examples/cases/schema-drift.json" --as-of 2026-10-15T10:05:00Z --output "$WHEEL_DIR/report.json"
+          python -c 'import json; from pathlib import Path; report=json.loads(Path("report.json").read_text(encoding="utf-8")); assert report["case_id"] == "example-schema-drift-001"; assert report["trace"]'
+
       - name: Prepare release assets and checksums
         run: |
           cp dist/* release-assets/
           (
             cd release-assets
-            sha256sum *.whl *.tar.gz *.json > SHA256SUMS
+            sha256sum *.whl *.tar.gz *.json > SHA256SUMS.txt
           )
 
-      - name: Publish GitHub Release with generated notes
+      - name: Create or validate immutable release tag
+        id: tag
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" release-assets/* \
+          TAG="${{ steps.version.outputs.tag }}"
+          REF_JSON="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}" 2>/dev/null || true)"
+          if [[ -n "$REF_JSON" ]]; then
+            OBJECT_TYPE="$(printf '%s' "$REF_JSON" | python -c 'import json,sys; print(json.load(sys.stdin)["object"]["type"])')"
+            OBJECT_SHA="$(printf '%s' "$REF_JSON" | python -c 'import json,sys; print(json.load(sys.stdin)["object"]["sha"])')"
+            if [[ "$OBJECT_TYPE" == "tag" ]]; then
+              TARGET_SHA="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${OBJECT_SHA}" --jq '.object.sha')"
+            else
+              TARGET_SHA="$OBJECT_SHA"
+            fi
+            if [[ "$TARGET_SHA" != "$GITHUB_SHA" ]]; then
+              echo "Tag ${TAG} already points to a different commit; refusing to move it." >&2
+              exit 1
+            fi
+            echo "tag_preexisted=true" >> "$GITHUB_OUTPUT"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" "$GITHUB_SHA" -m "Release $TAG"
+            git push origin "$TAG"
+            echo "tag_preexisted=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "release_needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release_needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish GitHub Release
+        if: steps.tag.outputs.release_needed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" release-assets/* \
             --verify-tag \
             --generate-notes \
-            --title "pipeline-rca ${GITHUB_REF_NAME}"
+            --title "pipeline-rca ${{ steps.version.outputs.tag }}"
 
       - name: Summarize release
         if: success()
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_NEEDED: ${{ steps.tag.outputs.release_needed }}
         run: |
           {
-            echo "## Release ${GITHUB_REF_NAME}"
-            echo
-            echo "- Tag matched pyproject.toml."
-            echo "- Ruff, mypy, and pytest passed."
-            echo "- Source distribution and wheel passed twine check."
-            echo "- Diagnostic and retrieval benchmark evidence and SHA-256 checksums were attached."
-            echo "- GitHub-generated release notes were published."
+            printf '## Release %s\n\n' "$RELEASE_TAG"
+            echo "- Ruff, mypy, and the complete pytest suite passed."
+            echo "- Diagnostic, retrieval, and end-to-end evaluation reports were generated."
+            echo "- Source distribution and wheel passed Twine metadata validation."
+            echo "- The built wheel passed an out-of-repository smoke test using bundled runbooks."
+            echo "- SHA-256 checksums were attached with the package and benchmark assets."
+            if [[ "$RELEASE_NEEDED" == "true" ]]; then
+              echo "- The immutable version tag and GitHub Release were published."
+            else
+              echo "- The matching immutable tag and release already existed; no release was overwritten."
+            fi
+            echo "- No package was published to PyPI."
           } >> "$GITHUB_STEP_SUMMARY"
