@@ -1,0 +1,6 @@
+{
+  "case_id": "schema-drift-001",
+  "expected_fault_classes": ["schema_drift"],
+  "expected_finding_codes": ["SCHEMA_REQUIRED_COLUMN_MISSING"],
+  "expected_affected_nodes": []
+}

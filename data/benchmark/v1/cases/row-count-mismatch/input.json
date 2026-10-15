@@ -1,0 +1,22 @@
+{
+  "case_id": "row-count-mismatch-001",
+  "question": "Why is the transformed order table missing expected rows?",
+  "datasets": [
+    {
+      "dataset": "analytics.fact_orders",
+      "row_count": 87,
+      "expected_row_count": 100,
+      "evidence_id": "ev-row-count-001"
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "ev-row-count-001",
+      "source": "data-quality-checks",
+      "locator": "analytics.fact_orders/expected-row-count",
+      "summary": "The transformation produced 87 rows where the input manifest predicted 100.",
+      "kind": "quality_check",
+      "observed_at": "2026-10-15T10:04:00Z"
+    }
+  ]
+}

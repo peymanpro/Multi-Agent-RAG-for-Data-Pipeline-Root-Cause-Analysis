@@ -1,0 +1,23 @@
+{
+  "case_id": "stale-input-001",
+  "question": "Is the latest orders partition fresh enough for the current run?",
+  "datasets": [
+    {
+      "dataset": "raw.orders",
+      "row_count": 500,
+      "latest_event_time": "2026-10-15T10:00:00Z",
+      "freshness_threshold_seconds": 60,
+      "evidence_id": "ev-stale-input-001"
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "ev-stale-input-001",
+      "source": "dataset-observability",
+      "locator": "raw.orders/freshness",
+      "summary": "The most recent event timestamp is five minutes before evaluation time.",
+      "kind": "dataset_observation",
+      "observed_at": "2026-10-15T10:05:00Z"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "as_of": "2026-10-15T10:05:00Z",
+  "cases": [
+    {
+      "case_id": "schema-drift-001",
+      "input": "cases/schema-drift/input.json",
+      "truth": "truth/schema-drift.json"
+    },
+    {
+      "case_id": "duplicate-records-001",
+      "input": "cases/duplicate-records/input.json",
+      "truth": "truth/duplicate-records.json"
+    },
+    {
+      "case_id": "stale-input-001",
+      "input": "cases/stale-input/input.json",
+      "truth": "truth/stale-input.json"
+    },
+    {
+      "case_id": "row-count-mismatch-001",
+      "input": "cases/row-count-mismatch/input.json",
+      "truth": "truth/row-count-mismatch.json"
+    },
+    {
+      "case_id": "upstream-task-failure-001",
+      "input": "cases/upstream-task-failure/input.json",
+      "truth": "truth/upstream-task-failure.json"
+    },
+    {
+      "case_id": "lineage-cycle-001",
+      "input": "cases/lineage-cycle/input.json",
+      "truth": "truth/lineage-cycle.json"
+    },
+    {
+      "case_id": "clean-control-001",
+      "input": "cases/clean-control/input.json",
+      "truth": "truth/clean-control.json"
+    }
+  ]
+}

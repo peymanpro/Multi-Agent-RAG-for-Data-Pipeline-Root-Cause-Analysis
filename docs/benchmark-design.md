@@ -73,8 +73,7 @@ Each scenario should have a stable ID, version, fault family, observable fixture
 
 Metrics are reported per case first, then aggregated. Missing or invalid outputs count as failures rather than being silently omitted.
 
-- **Root-cause top-1 accuracy:** fraction of cases where the highest-ranked cause matches ground truth.
-- **Root-cause top-k accuracy:** fraction where the correct cause appears within the first k ranked causes.
+- **Root-cause top-1/top-k accuracy:** reserved for a later agent baseline that emits explicit ranked cause hypotheses. The deterministic v1 baseline does not claim root-cause identification.
 - **Evidence precision:** fraction of cited evidence references that resolve to evidence available for that case and actually support the attached claim under the benchmark's deterministic checks.
 - **Evidence coverage:** fraction of required expected observations surfaced by the report or trace.
 - **Abstention quality:** whether the system declines to assert a cause when the case is explicitly ambiguous or evidence is insufficient.
@@ -83,7 +82,7 @@ Metrics are reported per case first, then aggregated. Missing or invalid outputs
 - **Cost:** recorded provider usage or a clearly labeled estimate when provider usage data is unavailable.
 - **Operational reliability:** malformed outputs, timeouts, budget overruns, and unhandled errors.
 
-Metrics must define their denominator and behavior for ties, abstentions, and missing fields. Do not collapse all dimensions into one score unless the weighting is documented and the component metrics remain available.
+The v1 runner reports micro-averaged fault-class detection, finding-code detection, affected-node detection, evidence-reference validity, and per-case runtime. Future agent baselines must additionally report ranked root-cause accuracy, abstention quality, latency, and cost where applicable. Metrics must define their denominator and behavior for ties, abstentions, and missing fields. Do not collapse all dimensions into one score unless the weighting is documented and the component metrics remain available.
 
 ## Comparison protocol
 

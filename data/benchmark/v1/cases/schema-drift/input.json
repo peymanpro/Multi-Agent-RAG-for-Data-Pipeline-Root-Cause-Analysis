@@ -1,0 +1,23 @@
+{
+  "case_id": "schema-drift-001",
+  "question": "Why is the customer identifier missing from the downstream model?",
+  "schemas": [
+    {
+      "dataset": "staging.orders",
+      "columns": ["order_id", "customer_ref", "amount"],
+      "required_columns": ["order_id", "customer_id", "amount"],
+      "schema_version": "source-v2",
+      "evidence_id": "ev-schema-drift-001"
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "ev-schema-drift-001",
+      "source": "schema-registry",
+      "locator": "staging.orders/source-v2",
+      "summary": "The schema contains customer_ref instead of required customer_id.",
+      "kind": "schema_snapshot",
+      "observed_at": "2026-10-15T10:00:00Z"
+    }
+  ]
+}

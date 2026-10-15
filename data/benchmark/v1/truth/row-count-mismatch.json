@@ -1,0 +1,6 @@
+{
+  "case_id": "row-count-mismatch-001",
+  "expected_fault_classes": ["row_count_mismatch"],
+  "expected_finding_codes": ["DATASET_ROW_COUNT_MISMATCH"],
+  "expected_affected_nodes": []
+}

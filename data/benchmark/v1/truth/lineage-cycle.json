@@ -1,0 +1,6 @@
+{
+  "case_id": "lineage-cycle-001",
+  "expected_fault_classes": ["broken_dependency"],
+  "expected_finding_codes": ["LINEAGE_CYCLE_DETECTED"],
+  "expected_affected_nodes": []
+}

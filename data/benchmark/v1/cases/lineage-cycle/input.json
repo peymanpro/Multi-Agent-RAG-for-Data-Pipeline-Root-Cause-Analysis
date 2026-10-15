@@ -1,0 +1,8 @@
+{
+  "case_id": "lineage-cycle-001",
+  "question": "Does the declared lineage graph contain a dependency cycle?",
+  "lineage": [
+    {"upstream": "orders_stage", "downstream": "orders_fact"},
+    {"upstream": "orders_fact", "downstream": "orders_stage"}
+  ]
+}
