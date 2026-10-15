@@ -13,7 +13,12 @@ from pipeline_rca.agents.models import AgentBudget
 from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
 from pipeline_rca.agents.reporting import result_to_dict
 from pipeline_rca.models import IncidentCase
-from pipeline_rca.retrieval.corpus import MarkdownCorpus
+from pipeline_rca.retrieval.corpus import MarkdownCorpus, SearchableCorpus
+from pipeline_rca.retrieval.embeddings import (
+    EmbeddingProviderError,
+    OpenAICompatibleEmbeddingProvider,
+)
+from pipeline_rca.retrieval.hybrid_corpus import HybridMarkdownCorpus
 from pipeline_rca.serialization import incident_case_from_mapping
 
 
@@ -45,6 +50,15 @@ def main(argv: list[str] | None = None) -> int:
         help="local Markdown runbook directory (default: data/runbooks)",
     )
     parser.add_argument(
+        "--retrieval-mode",
+        choices=("bm25", "hybrid"),
+        default="bm25",
+        help=(
+            "runbook retrieval strategy: bm25 works offline; hybrid requires "
+            "an OpenAI-compatible embedding provider"
+        ),
+    )
+    parser.add_argument(
         "--no-runbooks",
         action="store_true",
         help="disable retrieval and run deterministic specialist investigation only",
@@ -73,6 +87,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, help="optional path for the JSON report")
     args = parser.parse_args(argv)
 
+    if args.retrieval_mode == "hybrid" and args.no_runbooks:
+        print(
+            "pipeline-rca-investigate: error: --retrieval-mode hybrid cannot be "
+            "combined with --no-runbooks",
+            file=sys.stderr,
+        )
+        return 2
+
     try:
         payload = json.loads(args.case.read_text(encoding="utf-8"))
         if not isinstance(payload, dict):
@@ -89,9 +111,15 @@ def main(argv: list[str] | None = None) -> int:
             model_timeout_seconds=args.model_timeout_seconds,
             model_max_output_tokens=args.model_max_output_tokens,
         )
-        corpus = None
+        corpus: SearchableCorpus | None = None
         if not args.no_runbooks:
-            corpus = MarkdownCorpus.from_directory(args.runbooks)
+            if args.retrieval_mode == "hybrid":
+                provider = OpenAICompatibleEmbeddingProvider.from_env(
+                    timeout_seconds=budget.model_timeout_seconds
+                )
+                corpus = HybridMarkdownCorpus.from_directory(args.runbooks, provider)
+            else:
+                corpus = MarkdownCorpus.from_directory(args.runbooks)
         model = (
             OpenAICompatibleChatModel.from_env(
                 timeout_seconds=budget.model_timeout_seconds
@@ -110,7 +138,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(rendered, encoding="utf-8")
-    except (OSError, json.JSONDecodeError, ValueError) as exc:
+    except (OSError, json.JSONDecodeError, ValueError, EmbeddingProviderError) as exc:
         print(f"pipeline-rca-investigate: error: {exc}", file=sys.stderr)
         return 2
 
