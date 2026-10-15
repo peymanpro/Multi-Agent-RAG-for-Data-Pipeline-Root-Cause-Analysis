@@ -4,11 +4,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 from pipeline_rca.retrieval.chunking import chunk_document
 from pipeline_rca.retrieval.ingestion import load_markdown_directory
 from pipeline_rca.retrieval.lexical import BM25Retriever
 from pipeline_rca.retrieval.models import Document, DocumentChunk, RetrievalHit
+
+
+class SearchableCorpus(Protocol):
+    """Structural interface shared by lexical and hybrid corpora."""
+
+    documents: tuple[Document, ...]
+    chunks: tuple[DocumentChunk, ...]
+
+    def search(self, query: str, *, top_k: int = 5) -> tuple[RetrievalHit, ...]:
+        """Return ranked, source-addressable chunks."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)
