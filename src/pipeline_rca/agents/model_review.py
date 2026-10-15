@@ -91,7 +91,10 @@ def _bounded_review_input(
             "hypotheses": hypothesis_rows,
             "incident_evidence": evidence_rows,
         }
-        if len(json.dumps(payload, ensure_ascii=False, separators=(",", ":"))) <= budget.max_prompt_chars:
+        payload_length = len(
+            json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        )
+        if payload_length <= budget.max_prompt_chars:
             return payload, visible_ids
         if evidence_rows:
             evidence_rows.pop()
