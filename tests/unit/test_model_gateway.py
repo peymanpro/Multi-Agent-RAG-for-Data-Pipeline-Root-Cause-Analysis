@@ -1,7 +1,7 @@
 import json
 from io import BytesIO
-from urllib.error import HTTPError
 from unittest.mock import patch
+from urllib.error import HTTPError
 
 import pytest
 
@@ -58,8 +58,10 @@ def test_http_error_does_not_expose_api_key_or_provider_body() -> None:
         fp=BytesIO(b"provider response may contain sensitive details"),
     )
 
-    with patch("pipeline_rca.agents.model_gateway.urlopen", side_effect=error):
-        with pytest.raises(ModelProviderError) as captured:
+    with (
+        patch("pipeline_rca.agents.model_gateway.urlopen", side_effect=error),
+        pytest.raises(ModelProviderError) as captured,
+    ):
             model.complete(system_prompt="system", user_prompt="user")
 
     assert "HTTP 401" in str(captured.value)
