@@ -122,7 +122,8 @@ The initial implementation targets Python 3.12+, typed domain models, pytest, Ru
 - [x] **P5 — Evaluation:** deterministic-versus-agent benchmark, retrieval metrics, abstention-related cases, and reproducible per-case reports.
 - [x] **P6 — Optional API and local operations:** bounded read-only FastAPI endpoint, health/readiness checks, Docker image, Compose, and API contract tests.
 - [x] **P7 — Automated release v0.2.0:** version validation, source/wheel build, metadata validation, installed-wheel smoke test, three benchmark artifacts, SHA-256 checksums, and verified GitHub Release. Existing version tags are never moved.
-- [ ] **P8 — Security and production hardening:** broader prompt-injection regression suite, authentication/authorization for shared deployments, telemetry, persistent embedding cache, and production connectors.
+- [x] **P8a — Initial security and cache hardening:** prompt-injection regression tests, bounded HTTP request bodies, and persistent SQLite embedding cache with opaque provider namespaces.
+- [ ] **P8b — Production hardening:** authentication/authorization for shared deployments, telemetry, rate limiting, and production connectors.
 
 ## Run the current deterministic core
 
@@ -213,13 +214,13 @@ The report includes root-cause class Top-1/Top-k metrics, MRR, clean-case absten
 
 ## Dense and hybrid retrieval (optional)
 
-The default remains offline BM25. To enable hybrid retrieval, configure `RCA_API_KEY`, `RCA_EMBEDDING_MODEL`, and optionally `RCA_API_BASE_URL`, then run:
+The default remains offline BM25. To enable hybrid retrieval, configure `RCA_API_KEY`, `RCA_EMBEDDING_MODEL`, and optionally `RCA_API_BASE_URL`, `RCA_EMBEDDING_CACHE`, and `RCA_EMBEDDING_CACHE_NAMESPACE`, then run:
 
 ```bash
 pipeline-rca-investigate examples/cases/schema-drift.json --retrieval-mode hybrid
 ```
 
-Hybrid retrieval combines BM25 and cosine-similarity ranking with reciprocal-rank fusion (RRF). The current implementation embeds the local chunks each time the hybrid corpus is constructed and does not persist an embedding cache; provider latency and cost therefore need to be considered. The CI path uses test doubles and does not require API credentials. See [hybrid retrieval design](docs/hybrid-retrieval.md).
+Hybrid retrieval combines BM25 and cosine-similarity ranking with reciprocal-rank fusion (RRF). It caches vectors in SQLite by exact text and an opaque provider/model namespace, avoiding repeat embeddings for unchanged runbook chunks. The in-memory dense index is still rebuilt on each invocation; uncached input and query embeddings can incur provider cost. The CI path uses test doubles and does not require API credentials. See [hybrid retrieval design](docs/hybrid-retrieval.md).
 
 ## Architecture and benchmark contracts
 

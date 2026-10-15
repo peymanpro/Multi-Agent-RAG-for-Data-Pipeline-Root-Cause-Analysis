@@ -39,7 +39,7 @@ If `--with-model` is also supplied, `RCA_MODEL` must identify a chat-completions
 
 ## Cost, latency, and operational limits
 
-Hybrid retrieval is opt-in because it makes provider requests. The initial corpus builder computes embeddings when the corpus is constructed and currently does not persist an embedding cache. Each invocation may therefore re-embed every runbook chunk before making the query embedding request. Do not enable this mode in a cost-sensitive workflow without reviewing provider pricing, latency, retention policies, and the selected model.
+Hybrid retrieval is opt-in because it makes provider requests. Hybrid mode stores embeddings in a persistent SQLite cache by default at `~/.cache/pipeline-rca/embeddings.sqlite3`. Override this path with `RCA_EMBEDDING_CACHE`. Cache keys are SHA-256 hashes of the exact input and an opaque provider namespace derived from endpoint, model, and a credential fingerprint; the database does not store raw runbook text. On POSIX systems the database file is created with owner-only (`0600`) permissions. On a cache hit, unchanged chunks do not require another embedding request. New or changed chunks and uncached queries still incur provider latency and cost. Set `RCA_EMBEDDING_CACHE_NAMESPACE` to a manual revision/salt when a provider changes the model behind an unchanged model ID. Protect the cache file like other derived data, review provider retention policies, and use a different cache path when you need explicit isolation between environments.
 
 The adapter imposes a batch-size limit, a request timeout, a 4 MB response cap, dimension consistency checks, and safe error messages that do not echo credentials or provider response bodies. No embeddings are sent anywhere on the default BM25 path.
 
@@ -50,7 +50,7 @@ The dense and hybrid implementations are tested with deterministic fake embeddin
 ## Limitations
 
 - The first embedding adapter supports providers compatible with the OpenAI embeddings JSON shape.
-- The first dense index is in memory and does not persist vectors across runs.
+- The dense retrieval index is rebuilt in memory; cached vectors persist, but the index itself is not persisted.
 - There is no learned reranker in this phase.
 - The hand-labeled runbook benchmark is small and repository-specific.
 - RRF weights and constants are configuration choices, not universally optimal values.
