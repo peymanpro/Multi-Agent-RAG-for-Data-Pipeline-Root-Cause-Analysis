@@ -17,7 +17,7 @@ def test_markdown_chunking_preserves_heading_path_and_line_numbers() -> None:
 
     assert [chunk.text for chunk in chunks] == [
         "Intro text.",
-        "Compare the source schema.\nCheck required fields.",
+        "Compare the source schema. Check required fields.",
     ]
     assert chunks[0].section_path == ("Root",)
     assert chunks[0].start_line == 3
