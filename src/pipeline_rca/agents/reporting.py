@@ -13,6 +13,8 @@ def result_to_dict(result: InvestigationResult) -> dict[str, Any]:
         "case_id": result.case_id,
         "status": result.status.value,
         "model_assisted": result.model_assisted,
+        "model_reviewed": result.model_reviewed,
+        "model_calls": result.model_calls,
         "budget_exhausted": result.budget_exhausted,
         "affected_nodes": list(result.affected_nodes),
         "diagnostics": [
