@@ -27,7 +27,7 @@ from pipeline_rca.agents.specialists import (
 )
 from pipeline_rca.agents.synthesis import DeterministicHypothesisAgent
 from pipeline_rca.agents.verification import EvidenceVerifierAgent
-from pipeline_rca.models import EvidenceRecord, IncidentCase, Severity
+from pipeline_rca.models import DiagnosticFinding, EvidenceRecord, IncidentCase, Severity
 from pipeline_rca.retrieval.corpus import MarkdownCorpus
 from pipeline_rca.retrieval.models import RetrievalHit
 
