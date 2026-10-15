@@ -45,7 +45,7 @@ def test_request_id_rejects_control_characters_and_unbounded_values() -> None:
 
 def test_json_formatter_writes_one_json_object_per_record() -> None:
     record = logging.LogRecord("test", logging.INFO, "", 1, "event", (), None)
-    record.event_payload = {"event": "http.request", "status_code": 200}
+    setattr(record, "event_payload", {"event": "http.request", "status_code": 200})
     rendered = JsonLineFormatter().format(record)
 
     assert json.loads(rendered) == {"event": "http.request", "status_code": 200}
