@@ -14,6 +14,8 @@ from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
 from pipeline_rca.agents.reporting import result_to_dict
 from pipeline_rca.models import IncidentCase
 from pipeline_rca.retrieval.corpus import MarkdownCorpus
+from pipeline_rca.retrieval.embeddings import OpenAICompatibleEmbeddingProvider
+from pipeline_rca.retrieval.hybrid_corpus import HybridMarkdownCorpus
 from pipeline_rca.serialization import incident_case_from_mapping
 
 
@@ -43,6 +45,12 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=Path("data/runbooks"),
         help="local Markdown runbook directory (default: data/runbooks)",
+    )
+    parser.add_argument(
+        "--retrieval-mode",
+        choices=("bm25", "hybrid"),
+        default="bm25",
+        help="runbook retrieval mode; hybrid requires an embedding provider API",
     )
     parser.add_argument(
         "--no-runbooks",
@@ -90,8 +98,17 @@ def main(argv: list[str] | None = None) -> int:
             model_max_output_tokens=args.model_max_output_tokens,
         )
         corpus = None
-        if not args.no_runbooks:
+        if args.no_runbooks and args.retrieval_mode != "bm25":
+            raise ValueError("--retrieval-mode hybrid cannot be combined with --no-runbooks")
+        if not args.no_runbooks and args.retrieval_mode == "bm25":
             corpus = MarkdownCorpus.from_directory(args.runbooks)
+        elif not args.no_runbooks:
+            embedding_provider = OpenAICompatibleEmbeddingProvider.from_env(
+                timeout_seconds=budget.model_timeout_seconds
+            )
+            corpus = HybridMarkdownCorpus.from_directory(
+                args.runbooks, embedding_provider
+            )
         model = (
             OpenAICompatibleChatModel.from_env(
                 timeout_seconds=budget.model_timeout_seconds
