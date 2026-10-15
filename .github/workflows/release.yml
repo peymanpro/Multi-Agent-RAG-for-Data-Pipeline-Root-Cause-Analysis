@@ -79,9 +79,9 @@ jobs:
           {
             echo "## Release ${GITHUB_REF_NAME}"
             echo
-            echo "- Tag matched `pyproject.toml`."
+            echo "- Tag matched pyproject.toml."
             echo "- Ruff, mypy, and pytest passed."
-            echo "- Source distribution and wheel passed `twine check`."
+            echo "- Source distribution and wheel passed twine check."
             echo "- Diagnostic and retrieval benchmark evidence and SHA-256 checksums were attached."
             echo "- GitHub-generated release notes were published."
           } >> "$GITHUB_STEP_SUMMARY"
