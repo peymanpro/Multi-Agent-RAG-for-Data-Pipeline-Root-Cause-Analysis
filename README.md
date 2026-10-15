@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Stage: deterministic diagnostics, synthetic benchmark v1, lexical retrieval, and bounded multi-agent investigation are merged to main; retrieval relevance evaluation is in progress and release automation remains pending.** The default path runs offline; model-assisted generation and review are explicit opt-ins. A feature is considered complete only after CI and its acceptance tests pass.
+**Stage: deterministic diagnostics, synthetic benchmark v1, lexical retrieval, bounded multi-agent investigation, and offline baseline evaluation are implemented. The v0.2.0 release candidate includes automatic GitHub Release packaging; publication occurs only after merge and a successful release workflow.** The default path runs offline; model-assisted generation and review are explicit opt-ins. A feature is considered complete only after CI and its acceptance tests pass.
 
 ## Problem
 
@@ -210,6 +210,7 @@ The benchmark reports document-level Precision@k, Recall@k, Hit@k, MRR, and nDCG
 - [Agent orchestration](docs/agent-orchestration.md) — specialist roles, model boundary, counter-evidence review, trace, and limitations.
 - [Retrieval design](docs/retrieval.md) — chunking, BM25, provenance, and retrieval limitations.
 - [Benchmark design](docs/benchmark-design.md) — scenario contract, ground-truth separation, metrics, and release gate.
+- [Release process](docs/release-process.md) — versioning, automated validation, artifacts, and GitHub Releases.
 - [Contributing](CONTRIBUTING.md) — small changes, verification expectations, and review workflow.
 
 ## Contributing and quality gates
