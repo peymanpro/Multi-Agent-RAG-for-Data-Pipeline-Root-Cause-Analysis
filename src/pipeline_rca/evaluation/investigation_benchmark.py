@@ -24,7 +24,6 @@ from pipeline_rca.models import (
 from pipeline_rca.retrieval.corpus import MarkdownCorpus
 from pipeline_rca.serialization import incident_case_from_mapping
 
-
 _SEVERITY_RANK = {"critical": 4, "error": 3, "warning": 2, "info": 1}
 
 
@@ -150,7 +149,11 @@ def _multiagent_citations(
         for evidence_id in hypothesis["contradicting_evidence_ids"]:
             total += 1
             row = evidence_rows.get(evidence_id)
-            if row is not None and row["kind"] != "retrieved_document_chunk" and evidence_id in observable_evidence:
+            if (
+                row is not None
+                and row["kind"] != "retrieved_document_chunk"
+                and evidence_id in observable_evidence
+            ):
                 valid += 1
             else:
                 invalid.add(evidence_id)
