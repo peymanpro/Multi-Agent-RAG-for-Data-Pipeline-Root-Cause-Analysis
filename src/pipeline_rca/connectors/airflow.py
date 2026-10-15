@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 from urllib.parse import quote
 
 from pipeline_rca.connectors.base import (
@@ -32,8 +33,24 @@ def _state(value: object) -> TaskStatus:
 class AirflowRestConnector:
     """Pull one Airflow DAG run and its task/dependency metadata using GET requests only."""
 
-    def __init__(self, client: JsonGetClient) -> None:
+    def __init__(
+        self,
+        client: JsonGetClient,
+        *,
+        page_size: int = 500,
+        max_task_instances: int = 10_000,
+    ) -> None:
+        if isinstance(page_size, bool) or not isinstance(page_size, int) or page_size < 1:
+            raise ConnectorError("page_size must be a positive integer")
+        if (
+            isinstance(max_task_instances, bool)
+            or not isinstance(max_task_instances, int)
+            or max_task_instances < 1
+        ):
+            raise ConnectorError("max_task_instances must be a positive integer")
         self._client = client
+        self._page_size = page_size
+        self._max_task_instances = max_task_instances
 
     @classmethod
     def from_config(
@@ -44,6 +61,8 @@ class AirflowRestConnector:
         username: str | None = None,
         password: str | None = None,
         timeout_seconds: float = 8.0,
+        page_size: int = 500,
+        max_task_instances: int = 10_000,
     ) -> AirflowRestConnector:
         """Build a connector from operator-supplied source settings."""
         return cls(
@@ -53,8 +72,79 @@ class AirflowRestConnector:
                 username=username,
                 password=password,
                 timeout_seconds=timeout_seconds,
-            )
+            ),
+            page_size=page_size,
+            max_task_instances=max_task_instances,
         )
+
+    def _read_task_instances(self, run_path: str) -> list[dict[str, Any]]:
+        """Read every page, failing rather than returning a silently truncated snapshot."""
+        instances: list[dict[str, Any]] = []
+        offset = 0
+        expected_total: int | None = None
+
+        while True:
+            remaining_with_probe = self._max_task_instances + 1 - offset
+            if remaining_with_probe <= 0:
+                raise ConnectorError(
+                    f"Airflow task instances exceed the configured limit "
+                    f"of {self._max_task_instances}"
+                )
+            limit = min(self._page_size, remaining_with_probe)
+            page_data = self._client.get_json(
+                f"{run_path}/taskInstances?limit={limit}&offset={offset}"
+            )
+            page = page_data.get("task_instances")
+            if not isinstance(page, list) or any(not isinstance(item, dict) for item in page):
+                raise ConnectorError("Airflow response omitted a valid task_instances array")
+            if len(page) > limit:
+                raise ConnectorError(
+                    "Airflow returned more task instances than the requested limit"
+                )
+
+            total = page_data.get("total_entries")
+            if total is not None:
+                if isinstance(total, bool) or not isinstance(total, int) or total < 0:
+                    raise ConnectorError(
+                        "Airflow task instance total_entries must be a non-negative integer"
+                    )
+                if total > self._max_task_instances:
+                    raise ConnectorError(
+                        f"Airflow task instances exceed the configured limit "
+                        f"of {self._max_task_instances}"
+                    )
+                if expected_total is not None and total != expected_total:
+                    raise ConnectorError(
+                        "Airflow task instance total_entries changed during pagination"
+                    )
+                expected_total = total
+                if offset + len(page) > total:
+                    raise ConnectorError(
+                        "Airflow returned more task instances than total_entries"
+                    )
+
+            if len(instances) + len(page) > self._max_task_instances:
+                raise ConnectorError(
+                    f"Airflow task instances exceed the configured limit "
+                    f"of {self._max_task_instances}"
+                )
+            instances.extend(page)
+
+            if expected_total is not None:
+                if len(instances) == expected_total:
+                    return instances
+                if not page:
+                    raise ConnectorError(
+                        "Airflow pagination returned an empty page before total_entries"
+                    )
+                if len(page) < limit:
+                    raise ConnectorError(
+                        "Airflow pagination ended before total_entries were retrieved"
+                    )
+            elif len(page) < limit:
+                return instances
+
+            offset += len(page)
 
     def read_dag_run(self, dag_id: str, run_id: str) -> ConnectorSnapshot:
         """Read a DAG run, task instances and declared task dependencies."""
@@ -65,12 +155,11 @@ class AirflowRestConnector:
         run_path = f"api/v1/dags/{dag}/dagRuns/{run}"
         run_data = self._client.get_json(run_path)
         task_data = self._client.get_json(f"api/v1/dags/{dag}/tasks")
-        instances_data = self._client.get_json(f"{run_path}/taskInstances?limit=1000")
+        instances = self._read_task_instances(run_path)
 
         task_specs = task_data.get("tasks")
-        instances = instances_data.get("task_instances")
-        if not isinstance(task_specs, list) or not isinstance(instances, list):
-            raise ConnectorError("Airflow response omitted tasks or task_instances arrays")
+        if not isinstance(task_specs, list):
+            raise ConnectorError("Airflow response omitted a valid tasks array")
         observed_at = datetime.now(UTC).isoformat()
         evidence = []
         observations: list[TaskObservation] = []

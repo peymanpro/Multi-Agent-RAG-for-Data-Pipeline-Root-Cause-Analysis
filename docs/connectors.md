@@ -79,6 +79,7 @@ Call `to_incident_case(...)` to pass the observations to the existing determinis
 - Credentials are injected by the caller and never included in exception messages or evidence summaries.
 - HTTP errors expose the status code, not the upstream response body, which may contain sensitive information.
 - The default HTTP response bound is 4 MB. dbt artifacts and OpenLineage event files are bounded to 20 MB by default; OpenLineage parsing is limited to 10,000 lines.
+- Airflow task instances are fetched with offset pagination (500 per page by default). The connector refuses to return a silently truncated snapshot when the reported task-instance count exceeds the default limit of 10,000 or pagination responses are inconsistent. Tune `page_size` and `max_task_instances` on the connector when a DAG requires different bounds.
 - Network and filesystem access still depend on deployment-level egress policies, service-account permissions, and file permissions. The adapters do not replace those controls.
 
 ## What remains outside this adapter layer
