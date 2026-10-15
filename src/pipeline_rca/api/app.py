@@ -18,7 +18,6 @@ from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
 from pipeline_rca.agents.reporting import result_to_dict
 from pipeline_rca.api.auth import authenticate_bearer, configured_credentials
 from pipeline_rca.api.rate_limit import (
-    InMemoryRateLimitStore,
     RateLimitBackendError,
     RateLimitDecision,
     RateLimitStore,
@@ -64,19 +63,24 @@ def _load_corpus(directory: Path) -> tuple[MarkdownCorpus | None, str | None]:
     return corpus, None
 
 
-def _rate_limit_headers(decision: RateLimitDecision) -> dict[str, str]:
-    return {
+def _rate_limit_headers(
+    decision: RateLimitDecision, *, rejected: bool = False
+) -> dict[str, str]:
+    headers = {
         "X-RateLimit-Limit": str(decision.limit),
         "X-RateLimit-Remaining": str(decision.remaining),
-        "Retry-After": str(decision.retry_after_seconds),
+        "X-RateLimit-Reset": str(decision.retry_after_seconds),
     }
+    if rejected:
+        headers["Retry-After"] = str(decision.retry_after_seconds)
+    return headers
 
 
 def _rate_limited_response(decision: RateLimitDecision) -> JSONResponse:
     return JSONResponse(
         status_code=429,
         content={"detail": "request rate limit exceeded"},
-        headers=_rate_limit_headers(decision),
+        headers=_rate_limit_headers(decision, rejected=True),
     )
 
 
@@ -178,6 +182,7 @@ def create_app(
         if not ip_decision.allowed:
             return _rate_limited_response(ip_decision)
 
+        decision = ip_decision
         principal = None
         if credentials:
             principal = authenticate_bearer(
@@ -210,6 +215,7 @@ def create_app(
                 )
             if not subject_decision.allowed:
                 return _rate_limited_response(subject_decision)
+            decision = subject_decision
         elif auth_required:
             return JSONResponse(
                 status_code=503,
@@ -219,9 +225,6 @@ def create_app(
             request.scope.setdefault("state", {})["principal_subject"] = "anonymous"
 
         response = await call_next(request)
-        decision = (
-            subject_decision if credentials else ip_decision
-        ) if credentials else ip_decision
         response.headers.update(_rate_limit_headers(decision))
         return response
 
