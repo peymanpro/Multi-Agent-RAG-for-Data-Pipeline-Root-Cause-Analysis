@@ -254,10 +254,12 @@ def run_benchmark(root: Path) -> dict[str, Any]:
         },
         "cases": case_results,
         "limitations": [
-            "This first benchmark measures deterministic diagnostic detection, not LLM root-cause accuracy.",
+            "This first benchmark measures deterministic diagnostic detection, "
+            "not LLM root-cause accuracy.",
             "Synthetic cases are controlled fixtures and do not establish production performance.",
             "Runtime timing is observational and may vary between runs.",
-            "Evaluator truth files are separate from runtime input but are public repository files; this is separation by interface, not secrecy.",
+            "Evaluator truth files are separate from runtime input but are public repository "
+            "files; this is separation by interface, not secrecy.",
         ],
     }
 
