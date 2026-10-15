@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import hmac
 import json
 import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse, Response
+from starlette.middleware.base import RequestResponseEndpoint
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from pipeline_rca import __version__
@@ -52,8 +54,24 @@ def _load_corpus(directory: Path) -> tuple[MarkdownCorpus | None, str | None]:
     return corpus, None
 
 
-def create_app(*, runbooks_dir: str | Path | None = None) -> FastAPI:
-    """Create an API instance with a locally loaded corpus and no model provider."""
+def create_app(
+    *,
+    runbooks_dir: str | Path | None = None,
+    auth_token: str | None = None,
+) -> FastAPI:
+    """Create a local read-only API; optional Bearer auth protects the investigation route."""
+    configured_token = (
+        auth_token
+        if auth_token is not None
+        else os.environ.get("RCA_API_AUTH_TOKEN")
+    )
+    if configured_token == "":
+        configured_token = None
+    elif configured_token is not None:
+        if configured_token.strip() != configured_token:
+            raise ValueError("RCA_API_AUTH_TOKEN must not contain surrounding whitespace")
+        if len(configured_token) < 32:
+            raise ValueError("RCA_API_AUTH_TOKEN must contain at least 32 characters")
     configured_path = (
         Path(runbooks_dir)
         if runbooks_dir is not None
@@ -77,6 +95,27 @@ def create_app(*, runbooks_dir: str | Path | None = None) -> FastAPI:
     )
     application.state.runbook_corpus = corpus
     application.state.runbook_error = corpus_error
+
+    @application.middleware("http")
+    async def authenticate_investigations(
+        request: Request,
+        call_next: RequestResponseEndpoint,
+    ) -> Response:
+        """Protect only the investigation endpoint; keep health probes public."""
+        if (
+            configured_token is not None
+            and request.method == "POST"
+            and request.url.path == "/v1/investigations"
+        ):
+            supplied = request.headers.get("authorization", "")
+            expected = f"Bearer {configured_token}"
+            if not hmac.compare_digest(supplied.encode("utf-8"), expected.encode("utf-8")):
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "valid Bearer authentication is required"},
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+        return await call_next(request)
 
     @application.get("/health/live", tags=["health"])
     def live() -> dict[str, str]:
