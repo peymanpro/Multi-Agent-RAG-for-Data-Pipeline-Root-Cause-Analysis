@@ -5,7 +5,12 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from urllib.parse import quote
 
-from pipeline_rca.connectors.base import ConnectorError, HttpJsonClient, JsonGetClient, make_evidence
+from pipeline_rca.connectors.base import (
+    ConnectorError,
+    HttpJsonClient,
+    JsonGetClient,
+    make_evidence,
+)
 from pipeline_rca.connectors.models import ConnectorSnapshot
 from pipeline_rca.models import LineageEdge, TaskObservation, TaskStatus
 
