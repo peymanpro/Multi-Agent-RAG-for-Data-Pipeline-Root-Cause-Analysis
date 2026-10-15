@@ -59,6 +59,7 @@ class SchemaSnapshot:
     columns: tuple[str, ...]
     required_columns: tuple[str, ...] = ()
     schema_version: str | None = None
+    evidence_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +73,7 @@ class DatasetObservation:
     latest_event_time: str | None = None
     freshness_threshold_seconds: int | None = None
     null_count_by_column: Mapping[str, int] = field(default_factory=dict)
+    evidence_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,6 +86,7 @@ class TaskObservation:
     started_at: str | None = None
     finished_at: str | None = None
     message: str | None = None
+    evidence_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,6 +95,7 @@ class LineageEdge:
 
     upstream: str
     downstream: str
+    evidence_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
