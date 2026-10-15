@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from pipeline_rca.agents.models import AgentBudget
 from pipeline_rca.diagnostics.data_quality import diagnose_data_quality
 from pipeline_rca.diagnostics.schema import diagnose_schema
 from pipeline_rca.diagnostics.tasks import diagnose_tasks
@@ -12,13 +13,11 @@ from pipeline_rca.models import (
     DiagnosticFinding,
     FaultClass,
     IncidentCase,
-    LineageEdge,
     Severity,
 )
 from pipeline_rca.retrieval.corpus import MarkdownCorpus
 from pipeline_rca.retrieval.lexical import tokenize
 from pipeline_rca.retrieval.models import RetrievalHit
-from pipeline_rca.agents.models import AgentBudget
 
 
 class SchemaInvestigator:
