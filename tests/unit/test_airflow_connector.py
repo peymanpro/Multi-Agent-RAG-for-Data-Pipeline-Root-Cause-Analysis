@@ -37,7 +37,6 @@ class FakeClient:
         raise AssertionError(f"unexpected API path {path}")
 
 
-
 class PaginatedFakeClient(FakeClient):
     def get_json(self, path: str) -> dict[str, Any]:
         if "/taskInstances?" not in path:
@@ -84,6 +83,8 @@ def test_airflow_connector_rejects_missing_identifiers() -> None:
         assert "required" in str(exc)
     else:
         raise AssertionError("missing dag_id must be rejected")
+
+
 def test_airflow_connector_paginates_all_task_instances() -> None:
     client = PaginatedFakeClient()
     snapshot = AirflowRestConnector(client, page_size=2).read_dag_run(
