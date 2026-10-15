@@ -41,7 +41,7 @@ def test_investigation_endpoint_returns_cited_offline_report(client: TestClient)
 
     assert response.status_code == 200
     report = response.json()
-    assert report["case_id"] == "schema-drift-001"
+    assert report["case_id"] == "example-schema-drift-001"
     assert report["model_assisted"] is False
     assert report["model_calls"] == 0
     assert report["diagnostics"]
@@ -108,6 +108,6 @@ def test_readiness_degrades_safely_when_runbooks_are_missing(tmp_path: Path) -> 
             json={"case": case, "use_runbooks": False},
         )
         assert diagnosis.status_code == 200
-        assert diagnosis.json()["case_id"] == "schema-drift-001"
+        assert diagnosis.json()["case_id"] == "example-schema-drift-001"
     finally:
         test_client.close()
