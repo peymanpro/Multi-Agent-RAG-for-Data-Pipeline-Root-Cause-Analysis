@@ -14,7 +14,10 @@ def test_hybrid_cli_builds_an_injected_hybrid_corpus_without_network(
     capsys: Any,
 ) -> None:
     class StubProvider:
-        pass
+        cache_namespace = "test-only-provider"
+
+        def embed_texts(self, texts: tuple[str, ...]) -> tuple[tuple[float, ...], ...]:
+            return tuple((1.0, 0.0) for _ in texts)
 
     monkeypatch.setattr(
         investigation_cli.OpenAICompatibleEmbeddingProvider,
