@@ -22,14 +22,18 @@ class HybridRetriever:
         lexical_weight: float = 1.0,
         dense_weight: float = 1.0,
     ) -> None:
-        if isinstance(rrf_constant, bool) or rrf_constant < 1:
+        if (
+            isinstance(rrf_constant, bool)
+            or not isinstance(rrf_constant, int)
+            or rrf_constant < 1
+        ):
             raise ValueError("rrf_constant must be a positive integer")
         if not math.isfinite(lexical_weight) or lexical_weight <= 0:
             raise ValueError("lexical_weight must be finite and positive")
         if not math.isfinite(dense_weight) or dense_weight <= 0:
             raise ValueError("dense_weight must be finite and positive")
-        if lexical.chunk_count != dense.chunk_count:
-            raise ValueError("lexical and dense indexes must contain the same chunks")
+        if set(lexical.chunk_ids) != set(dense.chunk_ids):
+            raise ValueError("lexical and dense indexes must contain the same chunk identifiers")
         self._lexical = lexical
         self._dense = dense
         self._rrf_constant = rrf_constant
@@ -45,6 +49,8 @@ class HybridRetriever:
         """Combine two ranked lists using weighted reciprocal-rank fusion."""
         if top_k < 1:
             raise ValueError("top_k must be positive")
+        if self.chunk_count == 0:
+            return ()
         candidate_k = min(self.chunk_count, max(top_k * 4, top_k))
         lexical_hits = self._lexical.search(query, top_k=candidate_k)
         dense_hits = self._dense.search(query, top_k=candidate_k)
