@@ -1,0 +1,55 @@
+{
+  "case_id": "clean-control-001",
+  "question": "Do the current observations show a deterministic quality violation?",
+  "datasets": [
+    {
+      "dataset": "analytics.fact_customers",
+      "row_count": 10,
+      "expected_row_count": 10,
+      "duplicate_key_count": 0,
+      "null_count_by_column": {"customer_id": 0},
+      "evidence_id": "ev-clean-control-001"
+    }
+  ],
+  "schemas": [
+    {
+      "dataset": "analytics.fact_customers",
+      "columns": ["customer_id", "customer_name"],
+      "required_columns": ["customer_id", "customer_name"],
+      "evidence_id": "ev-clean-schema-001"
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "build_fact_customers",
+      "status": "success",
+      "evidence_id": "ev-clean-task-001"
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "ev-clean-control-001",
+      "source": "quality-checks",
+      "locator": "analytics.fact_customers/baseline",
+      "summary": "Expected row count, duplicate count, and null counts satisfy the stated baseline.",
+      "kind": "quality_check",
+      "observed_at": "2026-10-15T10:05:00Z"
+    },
+    {
+      "evidence_id": "ev-clean-schema-001",
+      "source": "schema-registry",
+      "locator": "analytics.fact_customers/schema-v1",
+      "summary": "Both required columns are present exactly once.",
+      "kind": "schema_snapshot",
+      "observed_at": "2026-10-15T10:05:00Z"
+    },
+    {
+      "evidence_id": "ev-clean-task-001",
+      "source": "workflow-run-log",
+      "locator": "build_fact_customers/latest",
+      "summary": "The task finished successfully.",
+      "kind": "task_run",
+      "observed_at": "2026-10-15T10:05:00Z"
+    }
+  ]
+}
