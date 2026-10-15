@@ -9,7 +9,13 @@ from typing import Any
 
 from pipeline_rca.connectors.base import ConnectorError, make_evidence
 from pipeline_rca.connectors.models import ConnectorSnapshot
-from pipeline_rca.models import EvidenceRecord, LineageEdge, SchemaSnapshot, TaskObservation, TaskStatus
+from pipeline_rca.models import (
+    EvidenceRecord,
+    LineageEdge,
+    SchemaSnapshot,
+    TaskObservation,
+    TaskStatus,
+)
 
 _MAX_FILE_BYTES = 20_000_000
 _MAX_EVENTS = 10_000
@@ -130,7 +136,11 @@ class OpenLineageEventFileConnector:
                     )
                     if columns:
                         schemas.append(
-                            SchemaSnapshot(dataset=name, columns=columns, evidence_id=row.evidence_id)
+                            SchemaSnapshot(
+                                dataset=name,
+                                columns=columns,
+                                evidence_id=row.evidence_id,
+                            )
                         )
 
         return ConnectorSnapshot(
