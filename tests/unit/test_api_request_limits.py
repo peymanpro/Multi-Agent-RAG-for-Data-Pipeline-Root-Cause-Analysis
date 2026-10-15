@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import cast
 
-from starlette.types import ASGIApp, Message, Scope, Send
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from pipeline_rca.api.request_limits import RequestBodyLimitMiddleware
 
@@ -35,7 +35,7 @@ def test_declared_oversized_body_is_rejected_before_receiving_body() -> None:
         sent: list[Message] = []
         app_called = False
 
-        async def app(scope: Scope, receive, send: Send) -> None:
+        async def app(scope: Scope, receive: Receive, send: Send) -> None:
             nonlocal app_called
             app_called = True
 
@@ -70,7 +70,7 @@ def test_streaming_body_without_content_length_is_rejected_at_limit() -> None:
         ]
         received = 0
 
-        async def app(scope: Scope, receive, send: Send) -> None:
+        async def app(scope: Scope, receive: Receive, send: Send) -> None:
             nonlocal app_called
             app_called = True
 
@@ -109,7 +109,7 @@ def test_bounded_streaming_body_is_replayed_intact_to_application() -> None:
         async def receive() -> Message:
             return cast(Message, incoming.pop(0))
 
-        async def app(scope: Scope, receive, send: Send) -> None:
+        async def app(scope: Scope, receive: Receive, send: Send) -> None:
             nonlocal delivered
             message = await receive()
             delivered = message.get("body", b"")
