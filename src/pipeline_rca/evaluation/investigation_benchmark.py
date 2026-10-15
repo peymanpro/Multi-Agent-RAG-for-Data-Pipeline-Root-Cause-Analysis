@@ -15,7 +15,12 @@ from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
 from pipeline_rca.agents.reporting import result_to_dict
 from pipeline_rca.evaluation.metrics import measure_sets
 from pipeline_rca.investigation import analyze_case
-from pipeline_rca.models import DiagnosticFinding, FaultClass, IncidentCase, InvestigationReport
+from pipeline_rca.models import (
+    DiagnosticFinding,
+    FaultClass,
+    IncidentCase,
+    InvestigationReport,
+)
 from pipeline_rca.retrieval.corpus import MarkdownCorpus
 from pipeline_rca.serialization import incident_case_from_mapping
 
@@ -265,8 +270,6 @@ def run_investigation_benchmark(
     observable_evidence_total = 0
     valid_references = 0
     invalid_reference_ids: set[str] = set()
-    baseline_root_hits: list[set[str]] = []
-    multiagent_root_hits: list[set[str]] = []
 
     for index, spec in enumerate(specs):
         if not isinstance(spec, dict) or set(spec) != {"case_id", "input", "truth"}:
@@ -313,10 +316,7 @@ def run_investigation_benchmark(
         expected_affected.append(truth_nodes)
         baseline_affected.append(set(baseline_dict["affected_nodes"]))
         multiagent_affected.append(set(result_dict["affected_nodes"]))
-        baseline_root_hits.append(set(baseline_ranked[:cutoff_value]) & truth_classes)
-        multiagent_root_hits.append(set(multiagent_ranked[:cutoff_value]) & truth_classes)
 
-        observable_ids = {item.evidence_id for item in case.evidence}
         observable_kinds = {item.evidence_id: item.kind for item in case.evidence}
         valid_refs, total_refs, invalid_ids = _multiagent_citations(result_dict, observable_kinds)
         valid_references += valid_refs
