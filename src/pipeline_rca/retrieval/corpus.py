@@ -15,9 +15,6 @@ from pipeline_rca.retrieval.models import Document, DocumentChunk, RetrievalHit
 class SearchableCorpus(Protocol):
     """Structural interface shared by lexical and hybrid corpora."""
 
-    documents: tuple[Document, ...]
-    chunks: tuple[DocumentChunk, ...]
-
     def search(self, query: str, *, top_k: int = 5) -> tuple[RetrievalHit, ...]:
         """Return ranked, source-addressable chunks."""
         ...
