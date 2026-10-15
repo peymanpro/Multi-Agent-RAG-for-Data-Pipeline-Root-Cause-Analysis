@@ -58,7 +58,7 @@ def validate_base_url(base_url: str) -> str:
 def evidence_identifier(source: str, locator: str, payload: object) -> str:
     """Create a stable opaque evidence identifier without embedding source secrets."""
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-    digest = hashlib.sha256(f"{source}\0{locator}\0{encoded}".encode("utf-8")).hexdigest()[:20]
+    digest = hashlib.sha256(f"{source}\0{locator}\0{encoded}".encode()).hexdigest()[:20]
     return f"{source}:{digest}"
 
 
@@ -133,7 +133,9 @@ class HttpJsonClient:
         except urllib.error.HTTPError as exc:
             raise ConnectorError(f"read-only connector returned HTTP {exc.code}") from exc
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
-            raise ConnectorError(f"read-only connector request failed ({type(exc).__name__})") from exc
+            raise ConnectorError(
+                f"read-only connector request failed ({type(exc).__name__})"
+            ) from exc
         if len(body) > self.max_response_bytes:
             raise ConnectorError("connector response exceeded the configured byte limit")
         try:
