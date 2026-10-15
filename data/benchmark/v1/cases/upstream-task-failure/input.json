@@ -1,0 +1,28 @@
+{
+  "case_id": "upstream-task-failure-001",
+  "question": "Which outputs may be affected by the failed order extraction task?",
+  "tasks": [
+    {
+      "task_id": "extract_orders",
+      "status": "failed",
+      "run_id": "run-2026-10-15-010",
+      "message": "Connection to the source timed out.",
+      "evidence_id": "ev-task-failure-001"
+    }
+  ],
+  "lineage": [
+    {"upstream": "extract_orders", "downstream": "staging.orders"},
+    {"upstream": "staging.orders", "downstream": "analytics.fact_orders"},
+    {"upstream": "analytics.fact_orders", "downstream": "analytics.sales_report"}
+  ],
+  "evidence": [
+    {
+      "evidence_id": "ev-task-failure-001",
+      "source": "workflow-run-log",
+      "locator": "run-2026-10-15-010/extract_orders",
+      "summary": "The extraction task ended in a failed state after a source connection timeout.",
+      "kind": "task_run",
+      "observed_at": "2026-10-15T10:03:00Z"
+    }
+  ]
+}
