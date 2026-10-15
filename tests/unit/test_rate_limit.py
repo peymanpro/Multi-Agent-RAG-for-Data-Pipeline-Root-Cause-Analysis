@@ -28,8 +28,8 @@ class FakeRedis:
 
 def test_in_memory_limiter_enforces_a_fixed_window() -> None:
     async def scenario() -> None:
-    now = [120.0]
-    store = InMemoryRateLimitStore(clock=lambda: now[0])
+        now = [120.0]
+        store = InMemoryRateLimitStore(clock=lambda: now[0])
 
         first = await store.consume("subject:alice", limit=2, window_seconds=60)
         second = await store.consume("subject:alice", limit=2, window_seconds=60)
@@ -51,8 +51,8 @@ def test_in_memory_limiter_enforces_a_fixed_window() -> None:
 
 def test_redis_limiter_uses_atomic_script_and_hashed_identity() -> None:
     async def scenario() -> None:
-    client = FakeRedis()
-    store = RedisRateLimitStore(client)
+        client = FakeRedis()
+        store = RedisRateLimitStore(client)
 
         first = await store.consume("subject:private-user", limit=1, window_seconds=60)
         second = await store.consume("subject:private-user", limit=1, window_seconds=60)
