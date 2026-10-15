@@ -1,0 +1,6 @@
+{
+  "case_id": "stale-input-001",
+  "expected_fault_classes": ["stale_input"],
+  "expected_finding_codes": ["DATASET_STALE_INPUT"],
+  "expected_affected_nodes": []
+}
