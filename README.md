@@ -214,7 +214,7 @@ The report includes root-cause class Top-1/Top-k metrics, MRR, clean-case absten
 
 ## Dense and hybrid retrieval (optional)
 
-The default remains offline BM25. To enable hybrid retrieval, configure `RCA_API_KEY`, `RCA_EMBEDDING_MODEL`, and optionally `RCA_API_BASE_URL` and `RCA_EMBEDDING_CACHE`, then run:
+The default remains offline BM25. To enable hybrid retrieval, configure `RCA_API_KEY`, `RCA_EMBEDDING_MODEL`, and optionally `RCA_API_BASE_URL`, `RCA_EMBEDDING_CACHE`, and `RCA_EMBEDDING_CACHE_NAMESPACE`, then run:
 
 ```bash
 pipeline-rca-investigate examples/cases/schema-drift.json --retrieval-mode hybrid
