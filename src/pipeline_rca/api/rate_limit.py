@@ -7,6 +7,7 @@ import hashlib
 import math
 import os
 import time
+from importlib import import_module
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -109,13 +110,17 @@ return {current, ttl}
         if not redis_url:
             raise RateLimitBackendError("RCA_RATE_LIMIT_REDIS_URL is empty")
         try:
-            from redis.asyncio import Redis
+            redis_async = import_module("redis.asyncio")
         except ImportError as exc:
             raise RateLimitBackendError(
                 'Redis rate limiting requires the optional dependency: pip install "pipeline-rca[api-redis]"'
             ) from exc
         try:
-            client = Redis.from_url(redis_url, encoding="utf-8", decode_responses=False)
+            client = redis_async.Redis.from_url(
+                redis_url,
+                encoding="utf-8",
+                decode_responses=False,
+            )
         except (TypeError, ValueError) as exc:
             raise RateLimitBackendError("RCA_RATE_LIMIT_REDIS_URL is invalid") from exc
         return cls(client)
