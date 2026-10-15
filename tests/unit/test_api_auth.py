@@ -13,7 +13,6 @@ from pipeline_rca.api.auth import (
     load_user_credentials,
 )
 
-
 TOKEN_A = "user-a-token-" + ("a" * 32)
 TOKEN_B = "user-b-token-" + ("b" * 32)
 
