@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import sqlite3
 from collections.abc import Sequence
 from pathlib import Path
@@ -75,10 +76,21 @@ class CachedEmbeddingProvider:
             return None
         return tuple(vector)
 
+    def _prepare_cache_file(self) -> None:
+        """Create the database with owner-only permissions on POSIX systems."""
+        self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+        if os.name == "posix":
+            flags = os.O_CREAT | os.O_RDWR | getattr(os, "O_NOFOLLOW", 0)
+            descriptor = os.open(self.cache_path, flags, 0o600)
+            try:
+                os.fchmod(descriptor, 0o600)
+            finally:
+                os.close(descriptor)
+
     def _read_cached(self, keys: Sequence[str]) -> dict[str, tuple[float, ...]]:
         if not keys:
             return {}
-        self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+        self._prepare_cache_file()
         try:
             with sqlite3.connect(self.cache_path, timeout=30.0) as connection:
                 connection.execute(
@@ -117,7 +129,7 @@ class CachedEmbeddingProvider:
     def _write_cached(self, vectors: dict[str, tuple[float, ...]]) -> None:
         if not vectors:
             return
-        self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+        self._prepare_cache_file()
         rows = [
             (key, json.dumps(vector, separators=(",", ":")), len(vector))
             for key, vector in sorted(vectors.items())
