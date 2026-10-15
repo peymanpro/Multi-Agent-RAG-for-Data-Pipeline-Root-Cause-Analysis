@@ -2,7 +2,6 @@ from pathlib import Path
 
 from pipeline_rca.retrieval import MarkdownCorpus
 
-
 ROOT = Path(__file__).resolve().parents[2]
 RUNBOOKS = ROOT / "data" / "runbooks"
 
