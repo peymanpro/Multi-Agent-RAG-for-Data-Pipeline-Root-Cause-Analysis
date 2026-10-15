@@ -77,6 +77,7 @@ class RootCauseHypothesis:
     status: HypothesisStatus
     supporting_evidence_ids: tuple[str, ...] = ()
     contradicting_evidence_ids: tuple[str, ...] = ()
+    context_evidence_ids: tuple[str, ...] = ()
     finding_codes: tuple[str, ...] = ()
     affected_nodes: tuple[str, ...] = ()
     rationale: str = ""
