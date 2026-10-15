@@ -49,8 +49,8 @@ def diagnose_schema(case: IncidentCase) -> tuple[DiagnosticFinding, ...]:
                         f"{', '.join(missing)}."
                     ),
                     evidence_ids=_evidence_ids(snapshot),
-                    observed=", ".join(snapshot.columns),
-                    expected=", ".join(snapshot.required_columns),
+                    observed=", ".join(sorted(snapshot.columns)),
+                    expected=", ".join(sorted(snapshot.required_columns)),
                 )
             )
 
