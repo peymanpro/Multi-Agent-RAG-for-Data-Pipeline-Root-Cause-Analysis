@@ -84,7 +84,8 @@ Common responses:
 
 - No model provider is instantiated by the HTTP API; model calls remain opt-in through the separate CLI.
 - The request schema forbids unknown top-level request fields and strict incident parsing rejects hidden evaluator labels.
-- The serialized observable case is limited to 256,000 characters.
+- The ASGI boundary rejects investigation HTTP bodies larger than 300,000 bytes before JSON parsing, including streamed bodies without a Content-Length header.
+- After parsing, the serialized observable case is separately limited to 256,000 Unicode characters.
 - The service does not mutate source datasets or run arbitrary SQL.
 - The included Compose configuration is local-only and does not implement authentication, user-level authorization, rate limiting, or TLS. Do not expose it directly to untrusted networks. Put it behind an authenticated gateway and apply deployment-specific resource limits before any shared deployment.
 - Readiness is a dependency signal, not a security control or production-availability guarantee.
