@@ -168,7 +168,9 @@ def incident_case_from_mapping(payload: Mapping[str, Any]) -> IncidentCase:
             status = TaskStatus(status_value)
         except ValueError as exc:
             allowed = ", ".join(status.value for status in TaskStatus)
-            raise ValueError(f"Invalid task status {status_value!r}; expected one of: {allowed}") from exc
+            raise ValueError(
+                f"Invalid task status {status_value!r}; expected one of: {allowed}"
+            ) from exc
         tasks.append(
             TaskObservation(
                 task_id=_required_string(row, "task_id"),
