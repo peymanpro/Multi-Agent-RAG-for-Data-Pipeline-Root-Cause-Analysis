@@ -74,7 +74,10 @@ class DbtArtifactConnector:
                 raise ConnectorError(f"dbt node {unique_id!r} has malformed dependencies")
             name = str(node.get("name", unique_id))[:160]
             relation = ".".join(
-                str(part) for part in (node.get("database"), node.get("schema"), node.get("alias") or name)
+                str(part)
+                for part in (
+                    node.get("database"), node.get("schema"), node.get("alias") or name
+                )
                 if part
             )
             locator = f"manifest.json#nodes/{unique_id}"
