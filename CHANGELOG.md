@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.3.0] — 2026-10-15
+
+### Added
+
+- Persistent SQLite caching for hybrid retrieval embeddings, keyed by exact-input hashes and an opaque provider/model/credential namespace.
+- Owner-only (0600) cache-file permissions on POSIX, corrupt-row repair, bounded provider batching, and the RCA_EMBEDDING_CACHE and RCA_EMBEDDING_CACHE_NAMESPACE overrides.
+- Optional single-token Bearer authentication for POST /v1/investigations, with startup validation, constant-time comparison, and public liveness/readiness probes.
+- An ASGI request-body limit that rejects oversized streamed or Content-Length request bodies before JSON parsing.
+- Offline prompt-injection regression tests for the hypothesis generator and counter-evidence reviewer, plus a security-boundary document.
+
+### Fixed
+
+- Release automation now distinguishes absent version tags from API lookup errors, refuses to move existing tags, validates build artifacts, and smoke-tests the installed wheel outside the repository.
+- Cache persistence now surfaces safe operational errors, repairs malformed cached vectors, and avoids storing original runbook/query text in SQLite.
+
+### Scope and limitations
+
+- The default BM25 and deterministic investigation paths remain offline. Embeddings and chat models are still opt-in.
+- The cache stores vectors, not raw input text; vectors remain derived data and should be protected. The dense index is rebuilt in memory.
+- Bearer authentication is one shared secret, not per-user identity or RBAC. The local Compose configuration remains loopback-only.
+- Benchmark cases and relevance labels remain synthetic or hand-authored; they are not a representative production incident dataset.
+- Citation-reference validation is not semantic-entailment proof, confidence values are uncalibrated, and the system does not automatically remediate pipelines.
+
+### Validation
+
+The automated release workflow runs Ruff, mypy, the complete offline test suite, all three benchmark reports, source/wheel packaging checks, and an installed-wheel smoke test before creating the immutable version tag and GitHub Release.
+
+
 All notable changes to this project are documented here.
 
 This project follows semantic versioning. Version tags use the `vMAJOR.MINOR.PATCH` form.

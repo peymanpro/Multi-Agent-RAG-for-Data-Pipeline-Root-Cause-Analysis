@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Released: v0.2.0.** The default workflow is deterministic and offline; hosted chat and hybrid embeddings are opt-in. The GitHub Release was created by Actions only after lint, static type-checking, tests, benchmark generation, package build/metadata validation, and an installed-wheel smoke test passed. Release assets include the wheel, source distribution, three benchmark reports, and SHA-256 checksums. This project does not publish to PyPI.
+**Release candidate: v0.3.0; latest published release: v0.2.0.** The candidate adds persistent hybrid-embedding caching, optional Bearer authentication for the read-only API, pre-parse request body limits, and prompt-injection regression coverage. It remains a deterministic/offline-first system; hosted chat and hybrid embeddings are opt-in. The versioned GitHub Release is published only after CI, benchmark generation, package validation, and installed-wheel smoke testing succeed. The project does not publish to PyPI.
 
 ## Problem
 
@@ -121,9 +121,9 @@ The initial implementation targets Python 3.12+, typed domain models, pytest, Ru
 - [x] **P4 — Bounded multi-agent investigation:** specialist roles, budgets, trace, model opt-in, deterministic fallback, and evidence-reference verification.
 - [x] **P5 — Evaluation:** deterministic-versus-agent benchmark, retrieval metrics, abstention-related cases, and reproducible per-case reports.
 - [x] **P6 — Optional API and local operations:** bounded read-only FastAPI endpoint, health/readiness checks, Docker image, Compose, and API contract tests.
-- [x] **P7 — Automated release v0.2.0:** version validation, source/wheel build, metadata validation, installed-wheel smoke test, three benchmark artifacts, SHA-256 checksums, and verified GitHub Release. Existing version tags are never moved.
-- [x] **P8a — Initial security and cache hardening:** prompt-injection regression tests, bounded HTTP request bodies, and persistent SQLite embedding cache with opaque provider namespaces.
-- [ ] **P8b — Production hardening:** authentication/authorization for shared deployments, telemetry, rate limiting, and production connectors.
+- [x] **P7 — Automated GitHub Releases:** version/tag validation, source/wheel builds, metadata checks, installed-wheel smoke tests, three benchmark artifacts, SHA-256 checksums, and immutable published tags.
+- [x] **P8a — Initial security and cache hardening:** prompt-injection regression tests, pre-parse HTTP body limits, persistent SQLite embedding cache with opaque provider namespaces, and optional shared-token Bearer authentication.
+- [ ] **P8b — Production hardening:** per-user authentication/authorization, structured telemetry, rate limiting suitable for multi-worker deployments, and production data connectors.
 
 ## Run the current deterministic core
 
