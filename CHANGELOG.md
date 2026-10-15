@@ -19,6 +19,7 @@ This project follows semantic versioning. Version tags use the `vMAJOR.MINOR.PAT
 - An optional OpenAI-compatible embeddings adapter, cosine-similarity retrieval, and weighted reciprocal-rank fusion for hybrid retrieval.
 - Offline evaluation comparing deterministic and multi-agent investigation behavior.
 - Automated quality checks and an automated versioned GitHub Release workflow.
+- Immutable release-tag handling that distinguishes absent tags from API lookup failures and refuses to move an existing version tag.
 
 ### Scope and limitations
 
