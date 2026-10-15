@@ -36,7 +36,7 @@ For local single-token compatibility, `RCA_API_AUTH_TOKEN` remains supported. Fo
 ]
 ```
 
-Supported scopes are `investigations:run`, `connectors:read`, and `telemetry:read`. Subjects must be unique; tokens must be unique and at least 32 characters. Unknown scopes, duplicate identities, or combining the legacy shared token with the per-user registry cause startup failure. Secrets should be injected by an orchestrator/secret manager and never committed to Git or copied into logs.
+Supported scope labels are `investigations:run`, `connectors:read`, and `telemetry:read`. The current HTTP surface exposes only `POST /v1/investigations`, which requires `investigations:run`; the other two labels are reserved for future separately reviewed API routes and do not expose connector or telemetry data endpoints in this release. The Airflow, dbt, and OpenLineage adapters are currently library-level, read-only connectors. Subjects must be unique; tokens must be unique and at least 32 characters. Unknown scopes, duplicate identities, or combining the legacy shared token with the per-user registry cause startup failure. Secrets should be injected by an orchestrator/secret manager and never committed to Git or copied into logs.
 
 Set `RCA_DEPLOYMENT_MODE=production` (or `RCA_API_AUTH_REQUIRED=true`) to make the application fail at startup when no authentication credentials are configured. With credentials configured, health probes remain public, unauthenticated investigation requests receive 401, and authenticated users lacking `investigations:run` receive 403. This is static per-user API-token authorization, not a full OIDC/SSO integration; production identity lifecycle, revocation, and secret rotation remain operator responsibilities.
 

@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Released: [v0.3.0](https://github.com/peymanpro/Multi-Agent-RAG-for-Data-Pipeline-Root-Cause-Analysis/releases/tag/v0.3.0).** The automated Release workflow completed successfully after lint, static type-checking, tests, all three benchmark generators, source/wheel packaging and metadata checks, and an installed-wheel smoke test. Release assets include the Python wheel, source distribution, diagnostic/retrieval/investigation reports, and SHA-256 checksums. Hybrid embeddings and model-assisted reasoning remain opt-in; BM25 and deterministic diagnostics work offline. API Bearer auth is an optional shared token, not per-user RBAC. The project does not publish to PyPI.
+**P8b implementation complete; v0.4.0 is the next automated release candidate.** The release is not considered published until its GitHub Actions release workflow succeeds. The implementation now includes per-user Bearer tokens with scope checks (static tokens, not OIDC/SSO), redacted JSON-line request telemetry, pre-parse body limits, Redis-backed fixed-window rate limiting shared across API workers, and read-only Airflow REST, dbt artifact, and OpenLineage event connectors. Production mode fails closed without per-user identity configuration and Redis. The core remains offline-first; hosted chat and hybrid embeddings are opt-in. No automatic remediation or PyPI publication is included.
 
 ## Problem
 
@@ -114,6 +114,16 @@ The connector package normalizes Airflow REST task runs, dbt `manifest.json`/`ru
 
 See [Read-only Production Data Connectors](docs/connectors.md) for setup examples, credentials, supported fields, and safety boundaries.
 
+## Production API hardening
+
+The API supports separate static Bearer credentials per subject with explicit scopes, structured JSON-line request telemetry, request correlation IDs, pre-parse request-byte limits, and fixed-window rate limiting. The development limiter is process-local; production mode requires a shared Redis backend so multiple workers and replicas consume the same counters. Per-user credentials are supplied through protected runtime configuration and are never committed to the repository.
+
+- [API authentication and telemetry](docs/api.md)
+- [Distributed rate limiting](docs/rate-limiting.md)
+- [Read-only connector contracts](docs/connectors.md)
+
+These are service-level controls, not an OIDC/SSO implementation or a production secret-management system. Deploy behind TLS and an authenticated gateway, use least-privilege source credentials, and keep external source access read-only.
+
 ## Technology direction
 
 The initial implementation targets Python 3.12+, typed domain models, pytest, Ruff, and mypy. Storage, orchestration frameworks, embedding providers, and model APIs will sit behind narrow interfaces and will be added only when required by a tested capability. The initial core and tests should run offline.
@@ -129,7 +139,7 @@ The initial implementation targets Python 3.12+, typed domain models, pytest, Ru
 - [x] **P6 — Optional API and local operations:** bounded read-only FastAPI endpoint, health/readiness checks, Docker image, Compose, and API contract tests.
 - [x] **P7 — Automated GitHub Releases:** version/tag validation, source/wheel builds, metadata checks, installed-wheel smoke tests, three benchmark artifacts, SHA-256 checksums, and immutable published tags.
 - [x] **P8a — Initial security and cache hardening:** prompt-injection regression tests, pre-parse HTTP body limits, persistent SQLite embedding cache with opaque provider namespaces, and optional shared-token Bearer authentication.
-- [ ] **P8b — Production hardening:** per-user authentication/authorization, structured telemetry, rate limiting suitable for multi-worker deployments, and production data connectors.
+- [x] **P8b — Production hardening:** per-user token authentication and scope-based authorization, structured/redacted JSON telemetry, pre-parse body limits, Redis-backed multi-worker rate limiting, and tested read-only Airflow/dbt/OpenLineage connectors. Static tokens are not a substitute for OIDC/SSO, and connectors do not execute SQL or mutate source systems.
 
 ## Run the current deterministic core
 
@@ -234,7 +244,9 @@ Hybrid retrieval combines BM25 and cosine-similarity ranking with reciprocal-ran
 - [Agent orchestration](docs/agent-orchestration.md) — specialist roles, model boundary, counter-evidence review, trace, and limitations.
 - [Retrieval design](docs/retrieval.md) — chunking, BM25, provenance, and retrieval limitations.
 - [Hybrid retrieval](docs/hybrid-retrieval.md) — optional embeddings, cosine similarity, RRF, and provider constraints.
-- [Read-only API](docs/api.md) — HTTP contracts, bounds, and local deployment safeguards.
+- [Read-only API](docs/api.md) — HTTP contracts, bounds, and authentication.
+- [Distributed rate limiting](docs/rate-limiting.md) — Redis-backed quotas across workers.
+- [Data connectors](docs/connectors.md) — Airflow REST, dbt artifacts, and OpenLineage exports.
 - [Benchmark design](docs/benchmark-design.md) — scenario contract, ground-truth separation, metrics, and release gate.
 - [Release process](docs/release-process.md) — automatic versioned releases, wheel smoke tests, and checksums.
 - [Contributing](CONTRIBUTING.md) — small changes, verification expectations, and review workflow.

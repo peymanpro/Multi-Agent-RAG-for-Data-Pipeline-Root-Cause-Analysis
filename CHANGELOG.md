@@ -1,5 +1,31 @@
 # Changelog
 
+All notable changes to this project are documented here.
+
+This project follows semantic versioning. Version tags use the `vMAJOR.MINOR.PATCH` form.
+
+## [0.4.0] — 2026-10-15
+
+### Added
+
+- Per-user Bearer-token identities with explicit scope checks, constant-time token comparison, unique-subject/token validation, and fail-closed production startup.
+- Structured JSON-line request telemetry with correlation IDs, status, duration, route, and subject fields; query strings, headers, request bodies, and credential values are excluded.
+- Atomic Redis fixed-window rate limiting shared across workers and replicas, with separate IP and authenticated-subject budgets, 429 responses, and fail-closed handling if Redis is unavailable.
+- Read-only Airflow REST, dbt artifact, and OpenLineage event adapters that normalize task status, schema metadata, lineage edges, and source-addressable evidence.
+- Connector transport bounds for timeouts, response sizes, redirect rejection, URL/path validation, and TLS outside loopback; unit and integration regression coverage for production-hardening contracts.
+
+### Security boundaries
+
+- Per-user authentication uses static service tokens and API scopes; it is not OIDC/SSO and does not implement enterprise identity lifecycle, user federation, or automated token revocation.
+- Production mode requires configured user identities and a distributed Redis rate-limit backend. The in-memory limiter is for development/single-process use only.
+- Source connectors are read-only: they do not execute SQL, launch jobs, mutate source systems, or perform remediation. Vendor-specific warehouse/catalog connectors remain future adapters.
+- Telemetry deliberately excludes raw request bodies, query strings, headers, and token values. Deployment still requires TLS, network policy, secret-manager integration, and least-privilege source accounts.
+
+### Validation
+
+- The pull-request CI gate runs Ruff, mypy, the complete test suite, and a Docker image build. The versioned Release workflow then rebuilds and validates artifacts on the merged main commit before publishing.
+
+
 ## [0.3.0] — 2026-10-15
 
 ### Added
@@ -27,10 +53,6 @@
 
 The automated release workflow runs Ruff, mypy, the complete offline test suite, all three benchmark reports, source/wheel packaging checks, and an installed-wheel smoke test before creating the immutable version tag and GitHub Release.
 
-
-All notable changes to this project are documented here.
-
-This project follows semantic versioning. Version tags use the `vMAJOR.MINOR.PATCH` form.
 
 ## [0.2.0] — 2026-10-15
 
