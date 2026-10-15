@@ -9,6 +9,11 @@ services:
     environment:
       RCA_RUNBOOKS_DIR: /app/data/runbooks
       RCA_API_AUTH_TOKEN: ${RCA_API_AUTH_TOKEN:-}
+      RCA_API_USERS_JSON: ${RCA_API_USERS_JSON:-}
+      RCA_DEPLOYMENT_MODE: ${RCA_DEPLOYMENT_MODE:-development}
+      RCA_RATE_LIMIT_REDIS_URL: ${RCA_RATE_LIMIT_REDIS_URL:-}
+      RCA_RATE_LIMIT_REQUESTS: ${RCA_RATE_LIMIT_REQUESTS:-30}
+      RCA_RATE_LIMIT_WINDOW_SECONDS: ${RCA_RATE_LIMIT_WINDOW_SECONDS:-60}
     user: "10001:10001"
     read_only: true
     tmpfs:
