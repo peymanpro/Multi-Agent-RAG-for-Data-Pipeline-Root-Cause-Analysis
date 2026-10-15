@@ -113,7 +113,8 @@ return {current, ttl}
             redis_async = import_module("redis.asyncio")
         except ImportError as exc:
             raise RateLimitBackendError(
-                'Redis rate limiting requires the optional dependency: pip install "pipeline-rca[api-redis]"'
+                "Redis rate limiting requires the optional dependency: "
+                'pip install "pipeline-rca[api-redis]"'
             ) from exc
         try:
             client = redis_async.Redis.from_url(
