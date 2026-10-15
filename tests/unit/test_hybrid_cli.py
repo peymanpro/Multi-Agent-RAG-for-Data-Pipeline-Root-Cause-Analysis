@@ -4,7 +4,6 @@ from typing import Any
 import pipeline_rca.agents.cli as investigation_cli
 from pipeline_rca.retrieval.corpus import MarkdownCorpus
 
-
 ROOT = Path(__file__).resolve().parents[2]
 CASE_PATH = ROOT / "examples" / "cases" / "schema-drift.json"
 RUNBOOKS = ROOT / "data" / "runbooks"
