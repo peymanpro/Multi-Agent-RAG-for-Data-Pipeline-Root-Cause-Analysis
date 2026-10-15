@@ -17,6 +17,15 @@ from pipeline_rca import __version__
 from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
 from pipeline_rca.agents.reporting import result_to_dict
 from pipeline_rca.api.auth import authenticate_bearer, configured_credentials
+from pipeline_rca.api.rate_limit import (
+    InMemoryRateLimitStore,
+    RateLimitBackendError,
+    RateLimitDecision,
+    RateLimitStore,
+    RedisRateLimitStore,
+    build_rate_limit_store,
+    positive_environment_int,
+)
 from pipeline_rca.api.request_limits import RequestBodyLimitMiddleware
 from pipeline_rca.api.telemetry import RequestTelemetryMiddleware
 from pipeline_rca.retrieval.corpus import MarkdownCorpus
@@ -55,11 +64,30 @@ def _load_corpus(directory: Path) -> tuple[MarkdownCorpus | None, str | None]:
     return corpus, None
 
 
+def _rate_limit_headers(decision: RateLimitDecision) -> dict[str, str]:
+    return {
+        "X-RateLimit-Limit": str(decision.limit),
+        "X-RateLimit-Remaining": str(decision.remaining),
+        "Retry-After": str(decision.retry_after_seconds),
+    }
+
+
+def _rate_limited_response(decision: RateLimitDecision) -> JSONResponse:
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "request rate limit exceeded"},
+        headers=_rate_limit_headers(decision),
+    )
+
+
 def create_app(
     *,
     runbooks_dir: str | Path | None = None,
     auth_token: str | None = None,
     users_json: str | None = None,
+    rate_limit_store: RateLimitStore | None = None,
+    rate_limit_requests: int | None = None,
+    rate_limit_window_seconds: int | None = None,
 ) -> FastAPI:
     """Create a read-only API with optional per-user bearer identities and scopes."""
     credentials = configured_credentials(legacy_token=auth_token, users_json=users_json)
@@ -69,6 +97,25 @@ def create_app(
     }
     if auth_required and not credentials:
         raise ValueError("API authentication is required but no API users are configured")
+    if rate_limit_store is None:
+        rate_limit_store = build_rate_limit_store(
+            redis_url=os.environ.get("RCA_RATE_LIMIT_REDIS_URL"),
+            production_mode=production_mode,
+        )
+    elif production_mode and not rate_limit_store.is_distributed:
+        raise ValueError("production mode requires a distributed Redis rate-limit store")
+    effective_rate_limit = (
+        rate_limit_requests
+        if rate_limit_requests is not None
+        else positive_environment_int("RCA_RATE_LIMIT_REQUESTS", 30)
+    )
+    effective_rate_window = (
+        rate_limit_window_seconds
+        if rate_limit_window_seconds is not None
+        else positive_environment_int("RCA_RATE_LIMIT_WINDOW_SECONDS", 60)
+    )
+    if effective_rate_limit < 1 or effective_rate_window < 1:
+        raise ValueError("rate-limit budget and window must be positive integers")
     configured_path = (
         Path(runbooks_dir)
         if runbooks_dir is not None
@@ -93,19 +140,45 @@ def create_app(
     application.add_middleware(RequestTelemetryMiddleware)
     application.state.runbook_corpus = corpus
     application.state.runbook_error = corpus_error
+    application.state.rate_limit_store = rate_limit_store
+    application.state.rate_limit_requests = effective_rate_limit
+    application.state.rate_limit_window_seconds = effective_rate_window
+
+    if isinstance(rate_limit_store, RedisRateLimitStore):
+        async def close_rate_limit_store() -> None:
+            await rate_limit_store.close()
+
+        application.add_event_handler("shutdown", close_rate_limit_store)
 
     @application.middleware("http")
     async def authenticate_investigations(
         request: Request,
         call_next: RequestResponseEndpoint,
     ) -> Response:
-        """Authenticate investigation calls and enforce explicit subject scopes."""
+        """Authenticate, authorize, and rate-limit investigation calls."""
         is_investigation = (
             request.method == "POST" and request.url.path == "/v1/investigations"
         )
         if not is_investigation:
             return await call_next(request)
 
+        client_host = request.client.host if request.client is not None else "unknown"
+        try:
+            # IP budget also protects the endpoint from repeated invalid-token probes.
+            ip_decision = await rate_limit_store.consume(
+                f"ip:{client_host}",
+                limit=effective_rate_limit,
+                window_seconds=effective_rate_window,
+            )
+        except RateLimitBackendError:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "rate-limit backend is unavailable"},
+            )
+        if not ip_decision.allowed:
+            return _rate_limited_response(ip_decision)
+
+        principal = None
         if credentials:
             principal = authenticate_bearer(
                 request.headers.get("authorization", ""),
@@ -124,6 +197,19 @@ def create_app(
                     status_code=403,
                     content={"detail": "the authenticated subject lacks investigations:run"},
                 )
+            try:
+                subject_decision = await rate_limit_store.consume(
+                    f"subject:{principal.subject}",
+                    limit=effective_rate_limit,
+                    window_seconds=effective_rate_window,
+                )
+            except RateLimitBackendError:
+                return JSONResponse(
+                    status_code=503,
+                    content={"detail": "rate-limit backend is unavailable"},
+                )
+            if not subject_decision.allowed:
+                return _rate_limited_response(subject_decision)
         elif auth_required:
             return JSONResponse(
                 status_code=503,
@@ -131,7 +217,13 @@ def create_app(
             )
         else:
             request.scope.setdefault("state", {})["principal_subject"] = "anonymous"
-        return await call_next(request)
+
+        response = await call_next(request)
+        decision = (
+            subject_decision if credentials else ip_decision
+        ) if credentials else ip_decision
+        response.headers.update(_rate_limit_headers(decision))
+        return response
 
     @application.get("/health/live", tags=["health"])
     def live() -> dict[str, str]:
@@ -156,6 +248,7 @@ def create_app(
             "retrieval_available": True,
             "runbook_document_count": len(current_corpus.documents),
             "runbook_chunk_count": len(current_corpus.chunks),
+            "rate_limit_backend": "redis" if rate_limit_store.is_distributed else "process-local",
         }
 
     @application.post("/v1/investigations", tags=["investigation"])
