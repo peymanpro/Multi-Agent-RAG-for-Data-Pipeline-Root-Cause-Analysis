@@ -2,7 +2,7 @@
 
 ## Automatic GitHub Releases
 
-A push to `main` that changes `pyproject.toml`, `CHANGELOG.md`, or `.github/workflows/release.yml` starts `.github/workflows/release.yml`. A maintainer may also run the workflow manually from the `main` branch.
+A push to `main` that changes `pyproject.toml` or `CHANGELOG.md` starts `.github/workflows/release.yml`. A maintainer may also run the workflow manually from the `main` branch.
 
 The workflow derives the version from `[project].version` and validates the corresponding stable tag `vMAJOR.MINOR.PATCH`. It then:
 
