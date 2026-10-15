@@ -204,6 +204,14 @@ Run the versioned relevance benchmark against the local runbooks:
 
 The benchmark reports document-level Precision@k, Recall@k, Hit@k, MRR, and nDCG@k. It uses hand-judged relevance for the five included runbooks and makes no claim about production-scale relevance or final answer correctness.
 
+## Evaluate end-to-end investigation
+
+Run the offline comparison between the original deterministic diagnostics baseline and the multi-agent orchestrator:
+
+    pipeline-rca-evaluate-investigation
+
+The report includes root-cause class Top-1/Top-k metrics, MRR, clean-case abstention, finding-code detection, affected-node detection, evidence-reference integrity, per-case timings, and exact labels for each synthetic case. Both execution paths run before each evaluator truth file is read. Results do not involve an LLM and do not establish production root-cause accuracy.
+
 ## Architecture and benchmark contracts
 
 - [Architecture](docs/architecture.md) — deterministic core, evidence flow, budgets, failure handling, and security constraints.

@@ -43,6 +43,7 @@ pipeline-rca = "pipeline_rca.cli:main"
 pipeline-rca-search = "pipeline_rca.retrieval.cli:main"
 pipeline-rca-investigate = "pipeline_rca.agents.cli:main"
 pipeline-rca-evaluate-retrieval = "pipeline_rca.evaluation.retrieval_benchmark:main"
+pipeline-rca-evaluate-investigation = "pipeline_rca.evaluation.investigation_benchmark:main"
 pipeline-rca-benchmark = "pipeline_rca.evaluation.benchmark:main"
 
 [tool.setuptools.packages.find]
