@@ -17,7 +17,7 @@ _REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 _LOGGER_NAME = "pipeline_rca.telemetry"
 
 
-class JsonLineHandler(logging.StreamHandler):
+class JsonLineHandler(logging.StreamHandler[Any]):
     """Stream handler identifiable without untyped custom LogRecord attributes."""
 
     _pipeline_rca_json = True
