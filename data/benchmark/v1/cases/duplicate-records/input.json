@@ -1,0 +1,23 @@
+{
+  "case_id": "duplicate-records-001",
+  "question": "Why does this dataset contain duplicate order keys?",
+  "datasets": [
+    {
+      "dataset": "staging.orders",
+      "row_count": 120,
+      "expected_row_count": 120,
+      "duplicate_key_count": 3,
+      "evidence_id": "ev-duplicates-001"
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "ev-duplicates-001",
+      "source": "quality-checks",
+      "locator": "staging.orders/unique-order-id",
+      "summary": "A uniqueness check found three duplicate order keys.",
+      "kind": "quality_check",
+      "observed_at": "2026-10-15T10:01:00Z"
+    }
+  ]
+}
