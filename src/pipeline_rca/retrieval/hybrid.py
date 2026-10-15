@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
-
 from pipeline_rca.retrieval.dense import DenseRetriever
 from pipeline_rca.retrieval.lexical import BM25Retriever
 from pipeline_rca.retrieval.models import DocumentChunk, RetrievalHit
