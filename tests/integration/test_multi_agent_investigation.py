@@ -56,7 +56,6 @@ class SequenceChatModel(FakeChatModel):
         return self.responses.pop(0)
 
 
-
 def _load_case() -> IncidentCase:
     payload = json.loads(CASE_PATH.read_text(encoding="utf-8"))
     return incident_case_from_mapping(payload)
