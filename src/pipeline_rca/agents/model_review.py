@@ -78,6 +78,13 @@ def _bounded_review_input(
     question = case.question[:1_000]
 
     while True:
+        visible_ids = {row["evidence_id"] for row in evidence_rows}
+        for index, row in enumerate(hypothesis_rows):
+            row["supporting_evidence_ids"] = [
+                evidence_id
+                for evidence_id in hypotheses[index].supporting_evidence_ids
+                if evidence_id in visible_ids
+            ]
         payload: dict[str, Any] = {
             "case_id": case.case_id,
             "question": question,
@@ -85,7 +92,7 @@ def _bounded_review_input(
             "incident_evidence": evidence_rows,
         }
         if len(json.dumps(payload, ensure_ascii=False, separators=(",", ":"))) <= budget.max_prompt_chars:
-            return payload, {row["evidence_id"] for row in evidence_rows}
+            return payload, visible_ids
         if evidence_rows:
             evidence_rows.pop()
         elif len(question) > 64:
@@ -166,7 +173,7 @@ class ModelCounterEvidenceReviewer:
                 )
             decision = item["decision"]
             rationale = item["rationale"]
-            if decision not in {"retain", "downgrade", "reject"}:
+            if not isinstance(decision, str) or decision not in {"retain", "downgrade", "reject"}:
                 raise ModelReviewError(f"reviews[{index}] has an invalid decision")
             if not isinstance(rationale, str) or len(rationale) > 1_000:
                 raise ModelReviewError(
@@ -218,12 +225,12 @@ class ModelCounterEvidenceReviewer:
 
             status = hypothesis.status
             confidence = hypothesis.confidence
-            if decision == "downgrade" or counter_ids:
-                status = HypothesisStatus.LOW_EVIDENCE
-                confidence = min(confidence, 0.60 if counter_ids else 0.35)
-            elif decision == "reject":
+            if decision == "reject":
                 status = HypothesisStatus.UNVERIFIED
                 confidence = min(confidence, 0.20)
+            elif decision == "downgrade" or counter_ids:
+                status = HypothesisStatus.LOW_EVIDENCE
+                confidence = min(confidence, 0.60 if counter_ids else 0.35)
 
             reviewed.append(
                 RootCauseHypothesis(
