@@ -64,9 +64,8 @@ def test_embedding_adapter_rejects_malformed_vectors(rows: list[dict[str, object
     with patch(
         "pipeline_rca.retrieval.embeddings.urlopen",
         return_value=BytesIO(body),
-    ):
-        with pytest.raises(EmbeddingProviderError):
-            provider.embed_texts(("first", "second"))
+    ), pytest.raises(EmbeddingProviderError):
+        provider.embed_texts(("first", "second"))
 
 
 def test_embedding_adapter_enforces_batch_limits_and_configuration() -> None:
