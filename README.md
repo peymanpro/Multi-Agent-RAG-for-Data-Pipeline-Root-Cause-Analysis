@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Release candidate v0.2.0.** The default workflow is deterministic and offline; hosted chat and hybrid embeddings are opt-in. The release workflow validates code, tests, package artifacts, and metadata before creating a versioned GitHub Release. The default path runs offline; model-assisted generation and review are explicit opt-ins. A feature is considered complete only after CI and its acceptance tests pass.
+**Released: v0.2.0.** The default workflow is deterministic and offline; hosted chat and hybrid embeddings are opt-in. The GitHub Release was created by Actions only after lint, static type-checking, tests, benchmark generation, package build/metadata validation, and an installed-wheel smoke test passed. Release assets include the wheel, source distribution, three benchmark reports, and SHA-256 checksums. This project does not publish to PyPI.
 
 ## Problem
 
@@ -121,7 +121,7 @@ The initial implementation targets Python 3.12+, typed domain models, pytest, Ru
 - [x] **P4 — Bounded multi-agent investigation:** specialist roles, budgets, trace, model opt-in, deterministic fallback, and evidence-reference verification.
 - [x] **P5 — Evaluation:** deterministic-versus-agent benchmark, retrieval metrics, abstention-related cases, and reproducible per-case reports.
 - [x] **P6 — Optional API and local operations:** bounded read-only FastAPI endpoint, health/readiness checks, Docker image, Compose, and API contract tests.
-- [x] **P7 — Release engineering foundation:** version validation, package build and metadata checks, benchmark artifacts, checksums, and GitHub Release automation. The release is complete only after a tagged workflow succeeds.
+- [x] **P7 — Automated release v0.2.0:** version validation, source/wheel build, metadata validation, installed-wheel smoke test, three benchmark artifacts, SHA-256 checksums, and verified GitHub Release. Existing version tags are never moved.
 - [ ] **P8 — Security and production hardening:** broader prompt-injection regression suite, authentication/authorization for shared deployments, telemetry, persistent embedding cache, and production connectors.
 
 ## Run the current deterministic core
