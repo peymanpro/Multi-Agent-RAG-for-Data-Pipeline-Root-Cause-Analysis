@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
@@ -58,6 +59,15 @@ class OpenAICompatibleEmbeddingProvider:
         self._base_url = base_url.rstrip("/")
         self._timeout_seconds = timeout_seconds
         self._max_batch_size = max_batch_size
+
+    @property
+    def cache_namespace(self) -> str:
+        """Opaque cache namespace partitioned by endpoint, model, and credential identity."""
+        credential_fingerprint = hashlib.sha256(self._api_key.encode("utf-8")).hexdigest()
+        identity = "\\0".join(
+            ("openai-compatible-embeddings-v1", self._base_url, self._model, credential_fingerprint)
+        )
+        return hashlib.sha256(identity.encode("utf-8")).hexdigest()
 
     @classmethod
     def from_env(
