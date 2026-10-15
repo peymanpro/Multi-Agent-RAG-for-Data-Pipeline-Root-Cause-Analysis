@@ -5,13 +5,14 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 from time import perf_counter
 from typing import Any
 
+from pipeline_rca.evaluation.metrics import SetMetrics, measure_sets
 from pipeline_rca.investigation import analyze_case
 from pipeline_rca.models import FaultClass, IncidentCase, InvestigationReport
-from pipeline_rca.evaluation.metrics import SetMetrics, measure_sets
 from pipeline_rca.serialization import incident_case_from_mapping
 
 
@@ -117,8 +118,6 @@ def run_benchmark(root: Path) -> dict[str, Any]:
         normalized = (
             f"{as_of_value[:-1]}+00:00" if as_of_value.endswith("Z") else as_of_value
         )
-        from datetime import datetime
-
         try:
             as_of = datetime.fromisoformat(normalized)
         except ValueError as exc:
@@ -187,11 +186,16 @@ def run_benchmark(root: Path) -> dict[str, Any]:
             for evidence_id in finding.evidence_ids
         ]
         invalid_for_case = sorted(
-            {evidence_id for evidence_id in cited_evidence_ids if evidence_id not in allowed_evidence_ids}
+            {
+                evidence_id
+                for evidence_id in cited_evidence_ids
+                if evidence_id not in allowed_evidence_ids
+            }
         )
         evidence_reference_count += len(cited_evidence_ids)
         valid_evidence_reference_count += len(cited_evidence_ids) - sum(
-            cited_evidence_ids.count(evidence_id) for evidence_id in invalid_for_case
+            cited_evidence_ids.count(evidence_id)
+            for evidence_id in invalid_for_case
         )
         invalid_evidence_ids.update(invalid_for_case)
 
