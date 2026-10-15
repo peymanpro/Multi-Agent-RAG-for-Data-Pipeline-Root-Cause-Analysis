@@ -79,6 +79,12 @@ class InvestigationOrchestrator:
         synthesis_detail = "Ranked hypotheses from deterministic findings."
         review_detail = "Model review was not configured."
 
+        def current_synthesis_detail() -> str:
+            return synthesis_detail
+
+        def current_review_detail() -> str:
+            return review_detail
+
         def execute(
             *,
             agent: str,
@@ -334,9 +340,9 @@ class InvestigationOrchestrator:
                 )
                 break
             if agent == "hypothesis-synthesis-agent":
-                detail_provider = lambda: synthesis_detail
+                detail_provider = current_synthesis_detail
             elif agent == "model-counterevidence-reviewer":
-                detail_provider = lambda: review_detail
+                detail_provider = current_review_detail
             else:
                 detail_provider = None
             execute(
