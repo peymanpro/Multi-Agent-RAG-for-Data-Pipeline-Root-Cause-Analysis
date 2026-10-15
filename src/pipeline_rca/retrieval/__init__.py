@@ -1,7 +1,7 @@
 """Source-addressable lexical and hybrid retrieval primitives."""
 
 from pipeline_rca.retrieval.chunking import chunk_document
-from pipeline_rca.retrieval.corpus import MarkdownCorpus
+from pipeline_rca.retrieval.corpus import MarkdownCorpus, SearchableCorpus
 from pipeline_rca.retrieval.dense import DenseRetriever
 from pipeline_rca.retrieval.embeddings import (
     EmbeddingProvider,
@@ -26,6 +26,7 @@ __all__ = [
     "MarkdownCorpus",
     "OpenAICompatibleEmbeddingProvider",
     "RetrievalHit",
+    "SearchableCorpus",
     "chunk_document",
     "load_markdown_directory",
 ]
