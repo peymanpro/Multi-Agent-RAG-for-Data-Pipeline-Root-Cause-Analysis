@@ -5,7 +5,6 @@ import pytest
 
 from pipeline_rca.evaluation.investigation_benchmark import run_investigation_benchmark
 
-
 ROOT = Path(__file__).resolve().parents[2]
 BENCHMARK = ROOT / "data" / "benchmark" / "v1"
 RUNBOOKS = ROOT / "data" / "runbooks"
