@@ -17,6 +17,25 @@ CASE_PATH = ROOT / "examples" / "cases" / "schema-drift.json"
 RUNBOOK_PATH = ROOT / "data" / "runbooks"
 
 
+class FakeChatModel:
+    def __init__(self, response: str) -> None:
+        self.response = response
+
+    def complete(
+        self,
+        *,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int = 1_000,
+    ) -> str:
+        assert system_prompt
+        assert user_prompt
+        assert temperature == 0.0
+        assert max_tokens == 1_000
+        return self.response
+
+
 class SequenceChatModel(FakeChatModel):
     def __init__(self, responses: list[str]) -> None:
         super().__init__("")
@@ -36,24 +55,6 @@ class SequenceChatModel(FakeChatModel):
         assert max_tokens == 1_000
         return self.responses.pop(0)
 
-
-class FakeChatModel:
-    def __init__(self, response: str) -> None:
-        self.response = response
-
-    def complete(
-        self,
-        *,
-        system_prompt: str,
-        user_prompt: str,
-        temperature: float = 0.0,
-        max_tokens: int = 1_000,
-    ) -> str:
-        assert system_prompt
-        assert user_prompt
-        assert temperature == 0.0
-        assert max_tokens == 1_000
-        return self.response
 
 
 def _load_case() -> IncidentCase:
