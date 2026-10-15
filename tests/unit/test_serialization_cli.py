@@ -29,7 +29,9 @@ def test_runtime_case_rejects_unknown_nested_fields() -> None:
         )
 
 
-def test_cli_emits_machine_readable_report(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_cli_emits_machine_readable_report(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     input_path = tmp_path / "incident.json"
     input_path.write_text(
         json.dumps(
@@ -59,7 +61,9 @@ def test_cli_emits_machine_readable_report(tmp_path: Path, capsys: pytest.Captur
     assert report["affected_nodes"] == ["fact_orders"]
 
 
-def test_cli_returns_nonzero_for_invalid_case(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_cli_returns_nonzero_for_invalid_case(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     input_path = tmp_path / "invalid.json"
     input_path.write_text('{"case_id": "missing-question"}', encoding="utf-8")
 
