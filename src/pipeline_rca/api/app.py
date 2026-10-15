@@ -15,10 +15,12 @@ from pydantic import BaseModel, ConfigDict, field_validator
 from pipeline_rca import __version__
 from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
 from pipeline_rca.agents.reporting import result_to_dict
+from pipeline_rca.api.request_limits import RequestBodyLimitMiddleware
 from pipeline_rca.retrieval.corpus import MarkdownCorpus
 from pipeline_rca.serialization import incident_case_from_mapping
 
 _MAX_CASE_CHARACTERS = 256_000
+_MAX_REQUEST_BODY_BYTES = 300_000
 
 
 class InvestigationRequest(BaseModel):
@@ -68,6 +70,10 @@ def create_app(*, runbooks_dir: str | Path | None = None) -> FastAPI:
             "model or modify production systems."
         ),
         version=__version__,
+    )
+    application.add_middleware(
+        RequestBodyLimitMiddleware,
+        max_body_bytes=_MAX_REQUEST_BODY_BYTES,
     )
     application.state.runbook_corpus = corpus
     application.state.runbook_error = corpus_error

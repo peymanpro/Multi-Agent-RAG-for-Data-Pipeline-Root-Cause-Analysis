@@ -96,6 +96,17 @@ def test_api_bounds_oversized_case_payload(client: TestClient) -> None:
     assert response.status_code == 413
 
 
+def test_api_rejects_oversized_http_body_before_json_parsing(client: TestClient) -> None:
+    response = client.post(
+        "/v1/investigations",
+        content=b"x" * 300_001,
+        headers={"content-type": "application/json"},
+    )
+
+    assert response.status_code == 413
+    assert "request body exceeds 300000 bytes" in response.json()["detail"]
+
+
 def test_readiness_degrades_safely_when_runbooks_are_missing(tmp_path: Path) -> None:
     test_client = TestClient(create_app(runbooks_dir=tmp_path / "missing"))
     try:
