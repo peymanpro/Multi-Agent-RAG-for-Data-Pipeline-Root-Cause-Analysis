@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify-build-release:
+    name: Verify, build, and publish GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out the tagged commit
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package and release tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]" build twine
+
+      - name: Validate tag against package version
+        run: python scripts/validate_release_version.py "${GITHUB_REF_NAME}"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Type check
+        run: mypy
+
+      - name: Test
+        run: pytest -q
+
+      - name: Generate deterministic benchmark evidence
+        run: |
+          mkdir -p release-assets
+          pipeline-rca-benchmark --output release-assets/diagnostic-benchmark.json
+
+      - name: Build source and wheel distributions
+        run: python -m build --outdir dist
+
+      - name: Validate distribution metadata
+        run: python -m twine check dist/*
+
+      - name: Prepare release assets and checksums
+        run: |
+          cp dist/* release-assets/
+          (
+            cd release-assets
+            sha256sum *.whl *.tar.gz diagnostic-benchmark.json > SHA256SUMS
+          )
+
+      - name: Publish GitHub Release with generated notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" release-assets/* \
+            --verify-tag \
+            --generate-notes \
+            --title "pipeline-rca ${GITHUB_REF_NAME}"
+
+      - name: Summarize release
+        if: success()
+        run: |
+          {
+            echo "## Release ${GITHUB_REF_NAME}"
+            echo
+            echo "- Tag matched `pyproject.toml`."
+            echo "- Ruff, mypy, and pytest passed."
+            echo "- Source distribution and wheel passed `twine check`."
+            echo "- Diagnostic benchmark evidence and SHA-256 checksums were attached."
+            echo "- GitHub-generated release notes were published."
+          } >> "$GITHUB_STEP_SUMMARY"
