@@ -40,6 +40,7 @@ dev = [
 
 [project.scripts]
 pipeline-rca = "pipeline_rca.cli:main"
+pipeline-rca-benchmark = "pipeline_rca.evaluation.benchmark:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
