@@ -108,6 +108,8 @@ class InvestigationResult:
     affected_nodes: tuple[str, ...]
     trace: tuple[AgentTraceEvent, ...]
     model_assisted: bool = False
+    model_reviewed: bool = False
+    model_calls: int = 0
     budget_exhausted: bool = False
 
     @property
