@@ -64,7 +64,7 @@ def test_redis_limiter_uses_atomic_script_and_hashed_identity() -> None:
         assert "INCR" in script and "PEXPIRE" in script
         assert numkeys == 1
         assert "private-user" not in str(args[0])
-        assert len(str(args[0]).rsplit(":", maxsplit=1)[-1]) == 10
+        assert len(str(args[0]).split(":")[-2]) == 64
         assert args[1] == 60_000
         assert second.retry_after_seconds == 45
 
