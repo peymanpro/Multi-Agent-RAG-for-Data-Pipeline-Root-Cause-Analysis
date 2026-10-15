@@ -54,6 +54,10 @@ line-length = 100
 target-version = "py312"
 src = ["src", "tests"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["pipeline_rca"]
+known-third-party = ["pytest"]
+
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
