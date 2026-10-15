@@ -108,7 +108,10 @@ def test_user_scopes_allow_or_deny_investigation_per_subject() -> None:
         permitted = scoped_client.post(
             "/v1/investigations",
             json={"case": case},
-            headers={"Authorization": f"Bearer {investigator_token}", "X-Request-ID": "scope-test-1"},
+            headers={
+                "Authorization": f"Bearer {investigator_token}",
+                "X-Request-ID": "scope-test-1",
+            },
         )
         denied = scoped_client.post(
             "/v1/investigations",
