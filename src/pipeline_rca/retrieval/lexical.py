@@ -77,6 +77,11 @@ class BM25Retriever:
         """Number of indexed chunks."""
         return len(self._chunks)
 
+    @property
+    def chunk_ids(self) -> tuple[str, ...]:
+        """Stable identifiers in the index insertion order."""
+        return tuple(chunk.chunk_id for chunk in self._chunks)
+
     def search(self, query: str, *, top_k: int = 5) -> tuple[RetrievalHit, ...]:
         """Return positive-scoring chunks ranked by BM25 then stable chunk ID."""
         if top_k < 1:
