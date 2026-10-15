@@ -63,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-retrieval-hits", type=int, default=5)
     parser.add_argument("--max-evidence-records", type=int, default=60)
     parser.add_argument("--max-hypotheses", type=int, default=5)
+    parser.add_argument("--max-model-calls", type=int, default=2)
     parser.add_argument("--max-prompt-chars", type=int, default=12_000)
     parser.add_argument("--model-timeout-seconds", type=float, default=20.0)
     parser.add_argument("--model-max-output-tokens", type=int, default=1_000)
@@ -80,6 +81,7 @@ def main(argv: list[str] | None = None) -> int:
             max_retrieval_hits=args.max_retrieval_hits,
             max_evidence_records=args.max_evidence_records,
             max_hypotheses=args.max_hypotheses,
+            max_model_calls=args.max_model_calls,
             max_prompt_chars=args.max_prompt_chars,
             model_timeout_seconds=args.model_timeout_seconds,
             model_max_output_tokens=args.model_max_output_tokens,
