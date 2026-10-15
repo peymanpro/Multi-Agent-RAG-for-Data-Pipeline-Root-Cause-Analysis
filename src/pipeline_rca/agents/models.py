@@ -33,6 +33,7 @@ class AgentBudget:
     max_retrieval_hits: int = 5
     max_evidence_records: int = 60
     max_hypotheses: int = 5
+    max_model_calls: int = 2
     max_prompt_chars: int = 12_000
     model_timeout_seconds: float = 20.0
     model_max_output_tokens: int = 1_000
@@ -43,6 +44,7 @@ class AgentBudget:
             "max_retrieval_hits": self.max_retrieval_hits,
             "max_evidence_records": self.max_evidence_records,
             "max_hypotheses": self.max_hypotheses,
+            "max_model_calls": self.max_model_calls,
             "max_prompt_chars": self.max_prompt_chars,
             "model_max_output_tokens": self.model_max_output_tokens,
         }
