@@ -72,7 +72,8 @@ def test_api_rejects_naive_as_of_timestamp(client: TestClient) -> None:
     )
 
     assert response.status_code == 422
-    assert "explicit UTC offset" in response.json()["detail"]
+    errors = response.json()["detail"]
+    assert any("explicit UTC offset" in error["msg"] for error in errors)
 
 
 def test_api_rejects_unconfigured_model_controls(client: TestClient) -> None:
