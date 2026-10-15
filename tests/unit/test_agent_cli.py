@@ -29,3 +29,17 @@ def test_investigation_cli_returns_error_for_invalid_json(
 
     assert main([str(invalid), "--no-runbooks"]) == 2
     assert "error" in capsys.readouterr().err
+
+
+
+def test_default_runbooks_fall_back_to_packaged_resources(
+    tmp_path: Path,
+    monkeypatch: Any,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+
+    runbooks = investigation_cli._default_runbooks_dir()
+
+    assert runbooks.is_dir()
+    assert (runbooks / "schema-drift.md").is_file()
+    assert len(list(runbooks.glob("*.md"))) >= 5
