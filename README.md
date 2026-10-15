@@ -160,6 +160,16 @@ pipeline-rca-benchmark data/benchmark/v1 --output artifacts/benchmark-v1.json
 
 The runner evaluates the deterministic diagnostic baseline only. It reports fault-class detection, finding-code detection, affected-node detection, evidence-reference validity, and per-case runtime. These measurements do **not** claim language-model root-cause accuracy. See [benchmark design](docs/benchmark-design.md) for the case contract, metrics, leakage boundaries, and limitations.
 
+## Search the local runbook corpus
+
+The repository includes an offline lexical retriever over operational Markdown runbooks. It keeps document-relative source paths, line spans, and section headings on every result.
+
+```bash
+pipeline-rca-search data/runbooks "duplicate business keys idempotent retry" --top-k 3
+```
+
+The first retrieval baseline is BM25. It does not need a hosted embedding service or API key and is intended to provide a measurable lexical baseline before semantic/hybrid retrieval is considered. See [retrieval design](docs/retrieval.md).
+
 ## Architecture and benchmark contracts
 
 - [Architecture](docs/architecture.md) — layer boundaries, evidence flow, budgets, failure handling, and security constraints.
