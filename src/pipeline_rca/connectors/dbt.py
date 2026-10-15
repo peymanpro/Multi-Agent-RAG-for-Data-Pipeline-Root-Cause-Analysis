@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -21,20 +20,6 @@ _STATUS_MAP = {
     "skipped": TaskStatus.SKIPPED,
     "runtime error": TaskStatus.FAILED,
 }
-
-
-def _read_json(path: Path) -> dict[str, Any]:
-    try:
-        if not path.is_file():
-            raise ConnectorError(f"required dbt artifact is missing: {path.name}")
-        if path.stat().st_size > _MAX_ARTIFACT_BYTES:
-            raise ConnectorError(f"dbt artifact exceeded {_MAX_ARTIFACT_BYTES} bytes: {path.name}")
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
-        raise ConnectorError(f"could not read dbt artifact {path.name}") from exc
-    if not isinstance(value, dict):
-        raise ConnectorError(f"dbt artifact {path.name} must contain a JSON object")
-    return value
 
 
 class DbtArtifactConnector:
@@ -153,9 +138,6 @@ class DbtArtifactConnector:
                 )
             )
 
-        digest = hashlib.sha256(
-            json.dumps(run_results.get("metadata", {}), sort_keys=True).encode("utf-8")
-        ).hexdigest()[:16]
         return ConnectorSnapshot(
             source="dbt-artifact",
             observed_at=observed_at,
