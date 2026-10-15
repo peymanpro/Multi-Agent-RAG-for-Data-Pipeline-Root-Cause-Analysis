@@ -10,6 +10,7 @@ from pipeline_rca.agents.models import AgentBudget
         {"max_retrieval_hits": 0},
         {"max_evidence_records": 0},
         {"max_hypotheses": 0},
+        {"max_model_calls": 0},
         {"max_prompt_chars": 0},
         {"model_max_output_tokens": 0},
         {"model_timeout_seconds": 0},
