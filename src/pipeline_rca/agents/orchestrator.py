@@ -63,7 +63,7 @@ class InvestigationOrchestrator:
                 "case evidence exceeds max_evidence_records; reduce the case or raise the budget"
             )
 
-        findings = []
+        findings: list[DiagnosticFinding] = []
         affected_nodes: tuple[str, ...] = ()
         hits: tuple[RetrievalHit, ...] = ()
         evidence: list[EvidenceRecord] = list(case.evidence)
