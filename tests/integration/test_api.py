@@ -53,6 +53,50 @@ def test_investigation_endpoint_returns_cited_offline_report(client: TestClient)
         assert set(hypothesis["supporting_evidence_ids"]) <= available_ids
 
 
+
+def test_bearer_auth_protects_investigation_but_keeps_health_probes_public() -> None:
+    token = "pipeline-rca-test-token-" + ("x" * 32)
+    with TestClient(create_app(runbooks_dir=RUNBOOKS, auth_token=token)) as protected_client:
+        assert protected_client.get("/health/live").status_code == 200
+        assert protected_client.get("/health/ready").status_code == 200
+
+        missing = protected_client.post(
+            "/v1/investigations",
+            content=b"{",
+            headers={"content-type": "application/json"},
+        )
+        invalid = protected_client.post(
+            "/v1/investigations",
+            json={"case": json.loads(CASE_FILE.read_text(encoding="utf-8"))},
+            headers={"Authorization": "Bearer wrong-token"},
+        )
+        valid = protected_client.post(
+            "/v1/investigations",
+            json={"case": json.loads(CASE_FILE.read_text(encoding="utf-8"))},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert missing.status_code == 401
+    assert missing.json()["detail"] == "valid Bearer authentication is required"
+    assert missing.headers["www-authenticate"] == "Bearer"
+    assert invalid.status_code == 401
+    assert token not in missing.text
+    assert valid.status_code == 200
+    assert valid.json()["case_id"] == "example-schema-drift-001"
+
+
+@pytest.mark.parametrize(
+    ("token", "message"),
+    [
+        ("short", "at least 32 characters"),
+        (" " + ("x" * 40), "surrounding whitespace"),
+    ],
+)
+def test_bearer_auth_rejects_weak_or_malformed_tokens(token: str, message: str) -> None:
+    with pytest.raises(ValueError, match=message):
+        create_app(runbooks_dir=RUNBOOKS, auth_token=token)
+
+
 def test_api_rejects_hidden_benchmark_truth(client: TestClient) -> None:
     case = json.loads(CASE_FILE.read_text(encoding="utf-8"))
     case["ground_truth"] = {"expected_fault_classes": ["schema_drift"]}
