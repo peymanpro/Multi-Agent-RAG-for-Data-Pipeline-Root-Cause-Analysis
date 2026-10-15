@@ -40,7 +40,7 @@ def diagnose_data_quality(
         raise ValueError("as_of must be timezone-aware")
 
     findings: list[DiagnosticFinding] = []
-    normalized_as_of = as_of.astimezone(timezone.utc) if as_of is not None else None
+    normalized_as_of = as_of.astimezone(UTC) if as_of is not None else None
 
     for dataset in case.datasets:
         evidence_ids = _evidence_ids(dataset)
