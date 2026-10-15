@@ -15,7 +15,7 @@ from pipeline_rca.models import (
     IncidentCase,
     Severity,
 )
-from pipeline_rca.retrieval.corpus import MarkdownCorpus
+from pipeline_rca.retrieval.corpus import SearchableCorpus
 from pipeline_rca.retrieval.lexical import tokenize
 from pipeline_rca.retrieval.models import RetrievalHit
 
@@ -106,7 +106,7 @@ class RunbookRetrievalInvestigator:
         case: IncidentCase,
         findings: tuple[DiagnosticFinding, ...],
         *,
-        corpus: MarkdownCorpus | None,
+        corpus: SearchableCorpus | None,
         budget: AgentBudget,
     ) -> tuple[RetrievalHit, ...]:
         if corpus is None:
