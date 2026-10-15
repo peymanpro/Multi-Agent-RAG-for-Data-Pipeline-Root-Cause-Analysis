@@ -36,7 +36,7 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         msg: str,
         headers: Any,
         newurl: str,
-    ) -> None:
+    ) -> urllib.request.Request | None:
         """Refuse redirects so credentials are never forwarded to a new origin."""
         return None
 
