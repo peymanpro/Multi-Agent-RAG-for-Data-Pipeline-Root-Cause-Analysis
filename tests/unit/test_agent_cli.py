@@ -4,7 +4,6 @@ from typing import Any
 
 from pipeline_rca.agents.cli import main
 
-
 ROOT = Path(__file__).resolve().parents[2]
 CASE_PATH = ROOT / "examples" / "cases" / "schema-drift.json"
 
@@ -23,7 +22,7 @@ def test_investigation_cli_emits_traceable_report(
 
 def test_investigation_cli_returns_error_for_invalid_json(
     tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
+    capsys: Any,
 ) -> None:
     invalid = tmp_path / "invalid.json"
     invalid.write_text("{", encoding="utf-8")
