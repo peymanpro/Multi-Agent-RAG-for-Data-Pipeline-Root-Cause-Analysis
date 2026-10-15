@@ -139,7 +139,7 @@ def test_report_serialization_marks_confidence_as_uncalibrated() -> None:
     result = InvestigationOrchestrator().run(_load_case())
     report = result_to_dict(result)
 
-    assert report["case_id"] == case_id = "example-schema-drift-001"
+    assert report["case_id"] == "example-schema-drift-001"
     assert report["hypotheses"]
     assert report["hypotheses"][0]["confidence_is_calibrated"] is False
     assert report["trace"][-1]["agent"] == "evidence-verifier-agent"
