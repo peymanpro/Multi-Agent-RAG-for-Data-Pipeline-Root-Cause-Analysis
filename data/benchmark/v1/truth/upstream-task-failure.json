@@ -1,0 +1,10 @@
+{
+  "case_id": "upstream-task-failure-001",
+  "expected_fault_classes": ["task_failure"],
+  "expected_finding_codes": ["PIPELINE_TASK_FAILED"],
+  "expected_affected_nodes": [
+    "staging.orders",
+    "analytics.fact_orders",
+    "analytics.sales_report"
+  ]
+}
