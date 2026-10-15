@@ -7,7 +7,10 @@ def test_markdown_chunking_preserves_heading_path_and_line_numbers() -> None:
         document_id="md:guide.md",
         title="Guide",
         source_uri="file:guide.md",
-        content="# Root\n\nIntro text.\n\n## Schema Drift\n\nCompare the source schema.\nCheck required fields.",
+        content=(
+            "# Root\n\nIntro text.\n\n## Schema Drift\n\n"
+            "Compare the source schema.\nCheck required fields."
+        ),
     )
 
     chunks = chunk_document(document, max_chars=200)
