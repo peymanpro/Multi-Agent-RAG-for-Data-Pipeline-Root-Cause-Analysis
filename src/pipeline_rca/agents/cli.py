@@ -52,7 +52,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--with-model",
         action="store_true",
-        help="enable optional model-assisted hypothesis generation from RCA_* environment variables",
+        help=(
+            "enable optional model-assisted hypothesis generation "
+            "from RCA_* environment variables"
+        ),
     )
     parser.add_argument(
         "--as-of",
