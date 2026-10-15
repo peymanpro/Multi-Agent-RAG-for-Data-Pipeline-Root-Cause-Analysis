@@ -346,8 +346,12 @@ def run_investigation_benchmark(
             }
         )
 
-    baseline_cause_metrics = _rank_metrics(expected_classes, baseline_predictions, k=cutoff_value)
-    multiagent_cause_metrics = _rank_metrics(expected_classes, multiagent_predictions, k=cutoff_value)
+    baseline_cause_metrics = _rank_metrics(
+        expected_classes, baseline_predictions, k=cutoff_value
+    )
+    multiagent_cause_metrics = _rank_metrics(
+        expected_classes, multiagent_predictions, k=cutoff_value
+    )
     return {
         "benchmark_version": version,
         "runtime_mode": "offline_deterministic_multi_agent",
