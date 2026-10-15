@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pipeline_rca.models import (
     DatasetObservation,
@@ -21,7 +21,7 @@ def _parse_timestamp(value: str) -> datetime:
     parsed = datetime.fromisoformat(normalized)
     if parsed.tzinfo is None:
         raise ValueError(f"Timestamp must include a UTC offset: {value!r}")
-    return parsed.astimezone(timezone.utc)
+    return parsed.astimezone(UTC)
 
 
 def _evidence_ids(dataset: DatasetObservation) -> tuple[str, ...]:
@@ -40,7 +40,7 @@ def diagnose_data_quality(
         raise ValueError("as_of must be timezone-aware")
 
     findings: list[DiagnosticFinding] = []
-    normalized_as_of = as_of.astimezone(timezone.utc) if as_of is not None else None
+    normalized_as_of = as_of.astimezone(UTC) if as_of is not None else None
 
     for dataset in case.datasets:
         evidence_ids = _evidence_ids(dataset)
