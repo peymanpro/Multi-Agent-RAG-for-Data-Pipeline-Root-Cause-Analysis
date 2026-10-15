@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+import pipeline_rca.agents.cli as investigation_cli
 from pipeline_rca.agents.cli import main
 
 ROOT = Path(__file__).resolve().parents[2]
