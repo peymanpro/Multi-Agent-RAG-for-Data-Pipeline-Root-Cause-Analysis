@@ -58,7 +58,9 @@ def load_user_credentials(raw: str | None) -> tuple[TokenCredential, ...]:
         if not isinstance(subject, str) or not subject or len(subject) > 128:
             raise AuthenticationConfigurationError(f"entry {index} has an invalid subject")
         if subject.strip() != subject or subject in subjects:
-            raise AuthenticationConfigurationError(f"entry {index} has a duplicate or invalid subject")
+            raise AuthenticationConfigurationError(
+                f"entry {index} has a duplicate or invalid subject"
+            )
         if not isinstance(token, str) or len(token) < 32 or token.strip() != token:
             raise AuthenticationConfigurationError(
                 f"entry {index} token must be at least 32 characters without surrounding whitespace"
@@ -86,7 +88,9 @@ def configured_credentials(
     *, legacy_token: str | None = None, users_json: str | None = None
 ) -> tuple[TokenCredential, ...]:
     """Load per-user credentials, preserving the older shared-token setting for migration."""
-    configured_users = users_json if users_json is not None else os.environ.get("RCA_API_USERS_JSON")
+    configured_users = (
+        users_json if users_json is not None else os.environ.get("RCA_API_USERS_JSON")
+    )
     credentials = load_user_credentials(configured_users)
     if credentials:
         if legacy_token or os.environ.get("RCA_API_AUTH_TOKEN"):
@@ -104,7 +108,12 @@ def configured_credentials(
         raise AuthenticationConfigurationError(
             "RCA_API_AUTH_TOKEN must be at least 32 characters without surrounding whitespace"
         )
-    return (TokenCredential(token, ApiPrincipal("shared-token", frozenset({"investigations:run"}))),)
+    return (
+        TokenCredential(
+            token,
+            ApiPrincipal("shared-token", frozenset({"investigations:run"})),
+        ),
+    )
 
 
 def authenticate_bearer(
