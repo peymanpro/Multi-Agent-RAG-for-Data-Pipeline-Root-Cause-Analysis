@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -14,6 +15,10 @@ from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
 from pipeline_rca.agents.reporting import result_to_dict
 from pipeline_rca.models import IncidentCase
 from pipeline_rca.retrieval.corpus import MarkdownCorpus, SearchableCorpus
+from pipeline_rca.retrieval.embedding_cache import (
+    CachedEmbeddingProvider,
+    EmbeddingCacheError,
+)
 from pipeline_rca.retrieval.embeddings import (
     EmbeddingProviderError,
     OpenAICompatibleEmbeddingProvider,
@@ -122,8 +127,19 @@ def main(argv: list[str] | None = None) -> int:
         corpus: SearchableCorpus | None = None
         if not args.no_runbooks:
             if args.retrieval_mode == "hybrid":
-                provider = OpenAICompatibleEmbeddingProvider.from_env(
+                base_provider = OpenAICompatibleEmbeddingProvider.from_env(
                     timeout_seconds=budget.model_timeout_seconds
+                )
+                cache_path = Path(
+                    os.environ.get(
+                        "RCA_EMBEDDING_CACHE",
+                        str(Path.home() / ".cache" / "pipeline-rca" / "embeddings.sqlite3"),
+                    )
+                ).expanduser()
+                provider = CachedEmbeddingProvider(
+                    base_provider,
+                    cache_path=cache_path,
+                    namespace=base_provider.cache_namespace,
                 )
                 corpus = HybridMarkdownCorpus.from_directory(args.runbooks, provider)
             else:
@@ -146,7 +162,13 @@ def main(argv: list[str] | None = None) -> int:
         else:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(rendered, encoding="utf-8")
-    except (OSError, json.JSONDecodeError, ValueError, EmbeddingProviderError) as exc:
+    except (
+        OSError,
+        json.JSONDecodeError,
+        ValueError,
+        EmbeddingCacheError,
+        EmbeddingProviderError,
+    ) as exc:
         print(f"pipeline-rca-investigate: error: {exc}", file=sys.stderr)
         return 2
 
