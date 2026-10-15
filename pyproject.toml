@@ -70,3 +70,6 @@ mypy_path = "src"
 packages = ["pipeline_rca"]
 strict = true
 warn_unused_configs = true
+
+[tool.setuptools.package-data]
+pipeline_rca = ["resources/runbooks/*.md"]
