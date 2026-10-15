@@ -6,7 +6,6 @@ on:
     paths:
       - "pyproject.toml"
       - "CHANGELOG.md"
-      - ".github/workflows/release.yml"
   workflow_dispatch:
 
 permissions:
