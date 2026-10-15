@@ -34,3 +34,5 @@ jobs:
         run: mypy
       - name: Test
         run: pytest -q
+      - name: Build optional API container
+        run: docker build --tag pipeline-rca-api:ci .

@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Implemented capabilities:** deterministic diagnostics, a seven-case synthetic benchmark, provenance-aware BM25 retrieval, bounded multi-agent investigation, retrieval relevance and end-to-end evaluation, and an optional read-only HTTP API. Dense/hybrid retrieval and hosted-model calls are opt-in; the default investigation path remains offline. GitHub Release automation validates version tags, tests, and package artifacts; the first versioned release is not claimed until its release workflow succeeds.
+**Release candidate v0.2.0.** The default workflow is deterministic and offline; hosted chat and hybrid embeddings are opt-in. The release workflow validates code, tests, package artifacts, and metadata before creating a versioned GitHub Release. The default path runs offline; model-assisted generation and review are explicit opt-ins. A feature is considered complete only after CI and its acceptance tests pass.
 
 ## Problem
 
@@ -229,7 +229,7 @@ Hybrid retrieval combines BM25 and cosine-similarity ranking with reciprocal-ran
 - [Hybrid retrieval](docs/hybrid-retrieval.md) — optional embeddings, cosine similarity, RRF, and provider constraints.
 - [Read-only API](docs/api.md) — HTTP contracts, bounds, and local deployment safeguards.
 - [Benchmark design](docs/benchmark-design.md) — scenario contract, ground-truth separation, metrics, and release gate.
-- [Release process](docs/releasing.md) — tag validation and release artifacts.
+- [Release process](docs/release-process.md) — automatic versioned releases, wheel smoke tests, and checksums.
 - [Contributing](CONTRIBUTING.md) — small changes, verification expectations, and review workflow.
 
 ## Contributing and quality gates
