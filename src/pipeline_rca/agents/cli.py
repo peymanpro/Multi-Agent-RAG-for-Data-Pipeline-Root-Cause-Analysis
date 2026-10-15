@@ -139,7 +139,10 @@ def main(argv: list[str] | None = None) -> int:
                 provider = CachedEmbeddingProvider(
                     base_provider,
                     cache_path=cache_path,
-                    namespace=base_provider.cache_namespace,
+                    namespace=(
+                        f"{base_provider.cache_namespace}:"
+                        f"{os.environ.get('RCA_EMBEDDING_CACHE_NAMESPACE', '').strip()}"
+                    ),
                 )
                 corpus = HybridMarkdownCorpus.from_directory(args.runbooks, provider)
             else:
