@@ -3,8 +3,7 @@ import math
 import pytest
 
 from pipeline_rca.retrieval.dense import DenseRetriever
-from pipeline_rca.retrieval.models import Document, DocumentChunk
-
+from pipeline_rca.retrieval.models import DocumentChunk
 
 class StubEmbeddingProvider:
     def __init__(self, query_vectors: dict[str, tuple[float, ...]]) -> None:
