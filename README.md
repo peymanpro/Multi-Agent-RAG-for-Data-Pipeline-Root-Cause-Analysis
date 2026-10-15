@@ -8,7 +8,7 @@
 
 ## Project status
 
-**P8b implementation complete; v0.4.0 is the next automated release candidate.** The release is not considered published until its GitHub Actions release workflow succeeds. The implementation now includes per-user Bearer tokens with scope checks (static tokens, not OIDC/SSO), redacted JSON-line request telemetry, pre-parse body limits, Redis-backed fixed-window rate limiting shared across API workers, and read-only Airflow REST, dbt artifact, and OpenLineage event connectors. Production mode fails closed without per-user identity configuration and Redis. The core remains offline-first; hosted chat and hybrid embeddings are opt-in. No automatic remediation or PyPI publication is included.
+**Released: [v0.4.0](https://github.com/peymanpro/Multi-Agent-RAG-for-Data-Pipeline-Root-Cause-Analysis/releases/tag/v0.4.0).** P8b production hardening is implemented and the automated Release workflow completed successfully after lint, type-checking, tests, benchmark generation, packaging checks, and an installed-wheel smoke test. Release assets include the Python wheel, source distribution, diagnostic/retrieval/investigation benchmark reports, and SHA-256 checksums. The API supports per-user static Bearer tokens and scopes (not OIDC/SSO), redacted JSON telemetry, pre-parse request-body limits, and Redis-backed rate limiting across workers. Airflow REST, dbt artifact, and OpenLineage connectors are read-only. Production mode fails closed without identity configuration and Redis. The core remains offline-first; hosted chat and hybrid embeddings are opt-in. No automatic remediation or PyPI publication is included.
 
 ## Problem
 
