@@ -7,16 +7,16 @@ from datetime import datetime
 from time import perf_counter
 
 from pipeline_rca.agents.model_gateway import ChatModel
-from pipeline_rca.agents.model_synthesis import HypothesisAgentError, ModelHypothesisAgent
 from pipeline_rca.agents.model_review import ModelCounterEvidenceReviewer, ModelReviewError
+from pipeline_rca.agents.model_synthesis import HypothesisAgentError, ModelHypothesisAgent
 from pipeline_rca.agents.models import (
     AgentBudget,
     AgentTraceEvent,
+    HypothesisStatus,
     InvestigationResult,
     InvestigationStatus,
     RootCauseHypothesis,
     VerificationIssue,
-    HypothesisStatus,
 )
 from pipeline_rca.agents.specialists import (
     DataQualityInvestigator,
@@ -106,7 +106,10 @@ class InvestigationOrchestrator:
             except Exception as exc:
                 status = "error"
                 partial = True
-                detail = f"Agent step failed ({type(exc).__name__}); later safe steps will continue."
+                detail = (
+                    f"Agent step failed ({type(exc).__name__}); "
+                    "later safe steps will continue."
+                )
                 issues.append(
                     VerificationIssue(
                         code="AGENT_EXECUTION_FAILED",
@@ -205,10 +208,16 @@ class InvestigationOrchestrator:
                     VerificationIssue(
                         code="MODEL_HYPOTHESIS_BUDGET_EXHAUSTED",
                         severity=Severity.WARNING,
-                        summary="The per-investigation model-call budget prevented hypothesis generation.",
+                        summary=(
+                            "The per-investigation model-call budget prevented "
+                            "hypothesis generation."
+                        ),
                     )
                 )
-                synthesis_detail = "Model hypothesis generation skipped because the model-call budget was exhausted."
+                synthesis_detail = (
+                    "Model hypothesis generation skipped because the "
+                    "model-call budget was exhausted."
+                )
 
             hypotheses = self._deterministic_hypothesis_agent.run(
                 case,
@@ -231,7 +240,10 @@ class InvestigationOrchestrator:
                     VerificationIssue(
                         code="MODEL_REVIEW_BUDGET_EXHAUSTED",
                         severity=Severity.WARNING,
-                        summary="The per-investigation model-call budget prevented counter-evidence review.",
+                        summary=(
+                            "The per-investigation model-call budget prevented "
+                            "counter-evidence review."
+                        ),
                     )
                 )
                 review_detail = "Model review skipped because the model-call budget was exhausted."
