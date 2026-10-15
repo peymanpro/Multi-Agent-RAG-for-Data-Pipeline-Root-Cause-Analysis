@@ -17,6 +17,15 @@ from pipeline_rca.retrieval.corpus import MarkdownCorpus
 from pipeline_rca.serialization import incident_case_from_mapping
 
 
+def _default_runbooks_dir() -> Path:
+    """Prefer the repository corpus, falling back to runbooks packaged in the wheel."""
+    repository_corpus = Path("data/runbooks")
+    if repository_corpus.is_dir():
+        return repository_corpus
+    packaged_corpus = Path(__file__).resolve().parents[1] / "resources" / "runbooks"
+    return packaged_corpus
+
+
 def _parse_as_of(value: str) -> datetime:
     normalized = f"{value[:-1]}+00:00" if value.endswith("Z") else value
     try:
@@ -41,7 +50,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--runbooks",
         type=Path,
-        default=Path("data/runbooks"),
+        default=_default_runbooks_dir(),
         help="local Markdown runbook directory (default: data/runbooks)",
     )
     parser.add_argument(
