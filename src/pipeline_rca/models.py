@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Mapping
+from collections.abc import Mapping
 
 
 class Severity(StrEnum):
