@@ -50,8 +50,13 @@ def test_dense_retriever_requires_one_finite_nonzero_vector_per_chunk() -> None:
         DenseRetriever((chunk,), ((0.0, 0.0),), provider)
     with pytest.raises(ValueError, match="finite"):
         DenseRetriever((chunk,), ((math.nan, 1.0),), provider)
+    second_chunk = _chunk("two", "second chunk")
     with pytest.raises(ValueError, match="dimensions"):
-        DenseRetriever((chunk,), ((1.0, 0.0, 2.0),), provider)
+        DenseRetriever(
+            (chunk, second_chunk),
+            ((1.0, 0.0), (1.0, 0.0, 2.0)),
+            provider,
+        )
 
 
 def test_dense_retriever_rejects_query_dimension_mismatch() -> None:
