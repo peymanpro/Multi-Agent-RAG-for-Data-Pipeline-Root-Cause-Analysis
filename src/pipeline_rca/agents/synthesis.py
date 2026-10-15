@@ -18,7 +18,6 @@ from pipeline_rca.models import (
 )
 from pipeline_rca.retrieval.models import RetrievalHit
 
-
 _BASE_CONFIDENCE = {
     Severity.CRITICAL: 0.76,
     Severity.ERROR: 0.65,
