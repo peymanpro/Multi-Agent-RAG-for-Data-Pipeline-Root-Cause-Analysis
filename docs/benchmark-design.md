@@ -108,3 +108,14 @@ A benchmark-related release must include:
 - aggregate metrics and metric definitions;
 - a note identifying synthetic versus external cases;
 - a clear limitations section.
+
+
+## End-to-end investigation comparison
+
+Run the separate deterministic-vs-multi-agent evaluator with:
+
+    pipeline-rca-evaluate-investigation
+
+The benchmark runs both the single-pass deterministic diagnostic function and the offline multi-agent orchestrator on the exact same observable case. The evaluator reads the matching truth file only after both predictions are complete. It reports cause-class Top-1/Top-k, MRR, clean-case abstention, finding-code set metrics, affected-node set metrics, incident-vs-runbook citation integrity, and per-case latency. It deliberately does not call a model provider; model-backed systems need a separately budgeted, provider-specific evaluation because outputs and costs are stochastic.
+
+Ground-truth separation prevents accidental injection into the runtime case object; it is not a security boundary against a malicious process that can read the public repository files. The synthetic benchmark is intended as a regression harness and must not be described as proof of production effectiveness.
