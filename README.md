@@ -196,11 +196,20 @@ pipeline-rca-search data/runbooks "duplicate business keys idempotent retry" --t
 
 The first retrieval baseline is BM25. It does not need a hosted embedding service or API key and is intended to provide a measurable lexical baseline before semantic/hybrid retrieval is considered. See [retrieval design](docs/retrieval.md).
 
+## Dense and hybrid retrieval (optional)
+
+The default remains offline BM25. To opt into hybrid retrieval, configure `RCA_API_KEY`, `RCA_EMBEDDING_MODEL`, and optionally `RCA_API_BASE_URL`, then run:
+
+    pipeline-rca-investigate examples/cases/schema-drift.json --retrieval-mode hybrid
+
+Hybrid retrieval combines BM25 and cosine-similarity ranking with reciprocal-rank fusion. The current hybrid corpus re-embeds local chunks on each construction and does not persist a vector cache, so provider cost/latency must be considered. See [hybrid retrieval design](docs/hybrid-retrieval.md).
+
 ## Architecture and benchmark contracts
 
 - [Architecture](docs/architecture.md) — deterministic core, evidence flow, budgets, failure handling, and security constraints.
 - [Agent orchestration](docs/agent-orchestration.md) — specialist roles, model boundary, counter-evidence review, trace, and limitations.
 - [Retrieval design](docs/retrieval.md) — chunking, BM25, provenance, and retrieval limitations.
+- [Hybrid retrieval](docs/hybrid-retrieval.md) — optional embeddings, cosine search, reciprocal-rank fusion, costs, and limits.
 - [Benchmark design](docs/benchmark-design.md) — scenario contract, ground-truth separation, metrics, and release gate.
 - [Contributing](CONTRIBUTING.md) — small changes, verification expectations, and review workflow.
 
