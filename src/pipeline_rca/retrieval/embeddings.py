@@ -46,7 +46,11 @@ class OpenAICompatibleEmbeddingProvider:
             raise ValueError("base_url must use HTTP or HTTPS")
         if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be finite and positive")
-        if isinstance(max_batch_size, bool) or max_batch_size < 1:
+        if (
+            isinstance(max_batch_size, bool)
+            or not isinstance(max_batch_size, int)
+            or max_batch_size < 1
+        ):
             raise ValueError("max_batch_size must be a positive integer")
 
         self._api_key = api_key
