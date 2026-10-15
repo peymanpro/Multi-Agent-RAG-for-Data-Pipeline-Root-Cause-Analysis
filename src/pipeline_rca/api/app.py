@@ -11,6 +11,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, field_validator
+from starlette.middleware.base import RequestResponseEndpoint
 
 from pipeline_rca import __version__
 from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
@@ -96,7 +97,7 @@ def create_app(
     @application.middleware("http")
     async def authenticate_investigations(
         request: Request,
-        call_next: Any,
+        call_next: RequestResponseEndpoint,
     ) -> Response:
         """Authenticate investigation calls and enforce explicit subject scopes."""
         is_investigation = (
