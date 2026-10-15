@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -10,7 +10,6 @@ from pipeline_rca.agents.reporting import result_to_dict
 from pipeline_rca.models import IncidentCase
 from pipeline_rca.retrieval.corpus import MarkdownCorpus
 from pipeline_rca.serialization import incident_case_from_mapping
-
 
 ROOT = Path(__file__).resolve().parents[2]
 CASE_PATH = ROOT / "examples" / "cases" / "schema-drift.json"
