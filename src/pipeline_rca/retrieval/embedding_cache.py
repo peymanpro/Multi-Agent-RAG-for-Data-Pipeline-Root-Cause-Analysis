@@ -14,6 +14,10 @@ from pipeline_rca.retrieval.embeddings import EmbeddingProvider, EmbeddingProvid
 _SCHEMA_VERSION = "embedding-cache-v1"
 
 
+class EmbeddingCacheError(RuntimeError):
+    """A persistent embedding-cache operation failed safely."""
+
+
 class CachedEmbeddingProvider:
     """Cache embeddings without storing the original input text.
 
@@ -76,21 +80,26 @@ class CachedEmbeddingProvider:
             return {}
         self.cache_path.parent.mkdir(parents=True, exist_ok=True)
         placeholders = ",".join("?" for _ in keys)
-        with sqlite3.connect(self.cache_path, timeout=30.0) as connection:
-            connection.execute(
-                """
-                CREATE TABLE IF NOT EXISTS embedding_cache (
-                    cache_key TEXT PRIMARY KEY,
-                    vector_json TEXT NOT NULL,
-                    dimensions INTEGER NOT NULL CHECK (dimensions > 0)
+        try:
+            with sqlite3.connect(self.cache_path, timeout=30.0) as connection:
+                connection.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS embedding_cache (
+                        cache_key TEXT PRIMARY KEY,
+                        vector_json TEXT NOT NULL,
+                        dimensions INTEGER NOT NULL CHECK (dimensions > 0)
+                    )
+                    """
                 )
-                """
-            )
-            rows = connection.execute(
-                f"SELECT cache_key, vector_json, dimensions FROM embedding_cache "
-                f"WHERE cache_key IN ({placeholders})",
-                tuple(keys),
-            ).fetchall()
+                rows = connection.execute(
+                    f"SELECT cache_key, vector_json, dimensions FROM embedding_cache "
+                    f"WHERE cache_key IN ({placeholders})",
+                    tuple(keys),
+                ).fetchall()
+        except sqlite3.Error as exc:
+            raise EmbeddingCacheError(
+                f"embedding cache read failed ({type(exc).__name__})"
+            ) from exc
 
         result: dict[str, tuple[float, ...]] = {}
         for key, raw_vector, dimensions in rows:
@@ -107,26 +116,31 @@ class CachedEmbeddingProvider:
             (key, json.dumps(vector, separators=(",", ":")), len(vector))
             for key, vector in sorted(vectors.items())
         ]
-        with sqlite3.connect(self.cache_path, timeout=30.0) as connection:
-            connection.execute(
-                """
-                CREATE TABLE IF NOT EXISTS embedding_cache (
-                    cache_key TEXT PRIMARY KEY,
-                    vector_json TEXT NOT NULL,
-                    dimensions INTEGER NOT NULL CHECK (dimensions > 0)
+        try:
+            with sqlite3.connect(self.cache_path, timeout=30.0) as connection:
+                connection.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS embedding_cache (
+                        cache_key TEXT PRIMARY KEY,
+                        vector_json TEXT NOT NULL,
+                        dimensions INTEGER NOT NULL CHECK (dimensions > 0)
+                    )
+                    """
                 )
-                """
-            )
-            connection.executemany(
-                """
-                INSERT INTO embedding_cache(cache_key, vector_json, dimensions)
-                VALUES (?, ?, ?)
-                ON CONFLICT(cache_key) DO UPDATE SET
-                    vector_json = excluded.vector_json,
-                    dimensions = excluded.dimensions
-                """,
-                rows,
-            )
+                connection.executemany(
+                    """
+                    INSERT INTO embedding_cache(cache_key, vector_json, dimensions)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT(cache_key) DO UPDATE SET
+                        vector_json = excluded.vector_json,
+                        dimensions = excluded.dimensions
+                    """,
+                    rows,
+                )
+        except sqlite3.Error as exc:
+            raise EmbeddingCacheError(
+                f"embedding cache write failed ({type(exc).__name__})"
+            ) from exc
 
     def embed_texts(self, texts: Sequence[str]) -> tuple[tuple[float, ...], ...]:
         """Return cached vectors and embed only unique missing inputs in bounded batches."""
