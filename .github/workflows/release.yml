@@ -95,10 +95,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${{ steps.version.outputs.tag }}"
-          REF_JSON="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}" 2>/dev/null || true)"
-          if [[ -n "$REF_JSON" ]]; then
-            OBJECT_TYPE="$(printf '%s' "$REF_JSON" | python -c 'import json,sys; print(json.load(sys.stdin)["object"]["type"])')"
-            OBJECT_SHA="$(printf '%s' "$REF_JSON" | python -c 'import json,sys; print(json.load(sys.stdin)["object"]["sha"])')"
+          REF_FILE="${RUNNER_TEMP}/release-tag-ref.json"
+          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}" > "$REF_FILE"; then
+            OBJECT_TYPE="$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["object"]["type"])' "$REF_FILE")"
+            OBJECT_SHA="$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["object"]["sha"])' "$REF_FILE")"
             if [[ "$OBJECT_TYPE" == "tag" ]]; then
               TARGET_SHA="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${OBJECT_SHA}" --jq '.object.sha')"
             else
@@ -110,6 +110,12 @@ jobs:
             fi
             echo "tag_preexisted=true" >> "$GITHUB_OUTPUT"
           else
+            # A failed API lookup is not automatically interpreted as an absent tag.
+            # Check the remote ref before attempting to create anything.
+            if [[ -n "$(git ls-remote origin "refs/tags/${TAG}")" ]]; then
+              echo "Unable to inspect existing tag ${TAG}; refusing to overwrite or move it." >&2
+              exit 1
+            fi
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git tag -a "$TAG" "$GITHUB_SHA" -m "Release $TAG"
