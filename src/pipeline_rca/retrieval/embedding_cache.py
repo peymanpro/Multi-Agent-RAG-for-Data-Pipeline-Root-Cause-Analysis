@@ -79,7 +79,6 @@ class CachedEmbeddingProvider:
         if not keys:
             return {}
         self.cache_path.parent.mkdir(parents=True, exist_ok=True)
-        placeholders = ",".join("?" for _ in keys)
         try:
             with sqlite3.connect(self.cache_path, timeout=30.0) as connection:
                 connection.execute(
@@ -91,11 +90,18 @@ class CachedEmbeddingProvider:
                     )
                     """
                 )
-                rows = connection.execute(
-                    f"SELECT cache_key, vector_json, dimensions FROM embedding_cache "
-                    f"WHERE cache_key IN ({placeholders})",
-                    tuple(keys),
-                ).fetchall()
+                rows = []
+                # Stay below SQLite's common host-parameter limit for large batches.
+                for start in range(0, len(keys), 500):
+                    batch_keys = keys[start : start + 500]
+                    placeholders = ",".join("?" for _ in batch_keys)
+                    rows.extend(
+                        connection.execute(
+                            "SELECT cache_key, vector_json, dimensions FROM embedding_cache "
+                            f"WHERE cache_key IN ({placeholders})",
+                            tuple(batch_keys),
+                        ).fetchall()
+                    )
         except sqlite3.Error as exc:
             raise EmbeddingCacheError(
                 f"embedding cache read failed ({type(exc).__name__})"
