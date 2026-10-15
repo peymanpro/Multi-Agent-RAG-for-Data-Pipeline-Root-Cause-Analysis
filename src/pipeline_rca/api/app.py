@@ -152,7 +152,7 @@ def create_app(
         async def close_rate_limit_store() -> None:
             await rate_limit_store.close()
 
-        application.add_event_handler("shutdown", close_rate_limit_store)
+        application.router.add_event_handler("shutdown", close_rate_limit_store)
 
     @application.middleware("http")
     async def authenticate_investigations(
