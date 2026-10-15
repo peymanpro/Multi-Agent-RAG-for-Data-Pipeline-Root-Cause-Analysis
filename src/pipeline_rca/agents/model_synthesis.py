@@ -279,7 +279,8 @@ class ModelHypothesisAgent:
                     finding_codes=tuple(sorted(findings_by_class.get(fault_class, set()))),
                     affected_nodes=tuple(class_affected),
                     rationale=(
-                        f"Model-assisted proposal; confidence is not calibrated. {rationale.strip()}"
+                        "Model-assisted proposal; confidence is not calibrated. "
+                        f"{rationale.strip()}"
                     ),
                 )
             )
