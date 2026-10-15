@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Stage: deterministic diagnostics, synthetic benchmark v1, lexical retrieval, and bounded multi-agent investigation are implemented on the current feature branch; release automation is still pending.** The default path runs offline; model-assisted generation and review are explicit opt-ins. A feature is considered complete only after CI and its acceptance tests pass.
+**Stage: deterministic diagnostics, synthetic benchmark v1, lexical retrieval, and bounded multi-agent investigation are merged to main; retrieval relevance evaluation is in progress and release automation remains pending.** The default path runs offline; model-assisted generation and review are explicit opt-ins. A feature is considered complete only after CI and its acceptance tests pass.
 
 ## Problem
 
@@ -195,6 +195,14 @@ pipeline-rca-search data/runbooks "duplicate business keys idempotent retry" --t
 ```
 
 The first retrieval baseline is BM25. It does not need a hosted embedding service or API key and is intended to provide a measurable lexical baseline before semantic/hybrid retrieval is considered. See [retrieval design](docs/retrieval.md).
+
+## Evaluate retrieval quality
+
+Run the versioned relevance benchmark against the local runbooks:
+
+    pipeline-rca-evaluate-retrieval
+
+The benchmark reports document-level Precision@k, Recall@k, Hit@k, MRR, and nDCG@k. It uses hand-judged relevance for the five included runbooks and makes no claim about production-scale relevance or final answer correctness.
 
 ## Architecture and benchmark contracts
 

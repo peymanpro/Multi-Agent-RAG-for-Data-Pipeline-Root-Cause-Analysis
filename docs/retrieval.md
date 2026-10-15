@@ -50,3 +50,22 @@ The command prints JSON and does not need a provider key or network access. To u
 - The current evidence locator contains source lines and section path, but no immutable checksum is included in the printed report yet.
 - Ranking relevance must be evaluated with labeled query/chunk examples; a plausible first result is not a benchmark claim.
 - Runbooks in this repository are controlled project documents, not a substitute for an organization's approved operational procedures.
+
+
+## Reproducible retrieval benchmark
+
+The repository includes a small hand-judged retrieval set at `data/retrieval-benchmark/v1/manifest.json`. Each query lists the runbook documents considered relevant. Labels identify document-level relevance, not whether a generated answer is correct.
+
+Run it offline:
+
+    pipeline-rca-evaluate-retrieval
+
+Save the report for inspection:
+
+    pipeline-rca-evaluate-retrieval --output artifacts/retrieval-v1.json
+
+The runner reports mean Precision@k, Recall@k, Hit@k, MRR, and nDCG@k across the fixed query set. Results are computed over unique documents: only the highest-ranked chunk for a document determines its document rank, so repeated chunks from one file do not artificially occupy multiple ranks.
+
+The metric denominator for Precision@k is the configured k even if fewer than k documents match the query. Recall@k uses the number of relevant documents judged for that query. MRR considers the first relevant document anywhere in the unique-document ranking. nDCG uses binary relevance and logarithmic discounting.
+
+The relevance judgments are small and hand-authored for this runbook collection. They are a regression harness for this repository, not a representative industry benchmark. If a runbook or query changes, revise the benchmark manifest and inspect ranking regressions rather than silently editing expected labels to fit current behavior.

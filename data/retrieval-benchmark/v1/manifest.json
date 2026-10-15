@@ -1,0 +1,56 @@
+{
+  "version": "1.0.0",
+  "k": 3,
+  "cases": [
+    {
+      "case_id": "retrieval-schema-contract-001",
+      "query": "schema contract missing required column renamed customer identifier",
+      "relevant_document_ids": ["md:schema-drift.md"]
+    },
+    {
+      "case_id": "retrieval-duplicate-key-001",
+      "query": "duplicate business keys idempotent batch retry replay",
+      "relevant_document_ids": ["md:duplicate-records.md"]
+    },
+    {
+      "case_id": "retrieval-freshness-threshold-001",
+      "query": "stale input freshness threshold event timestamp last successful producer",
+      "relevant_document_ids": ["md:stale-input.md"]
+    },
+    {
+      "case_id": "retrieval-row-count-001",
+      "query": "row count mismatch source manifest actual expected counts transformation",
+      "relevant_document_ids": ["md:row-count-mismatch.md"]
+    },
+    {
+      "case_id": "retrieval-task-lineage-001",
+      "query": "failed producer task downstream lineage impact and dependency cycle",
+      "relevant_document_ids": ["md:task-failure-and-lineage.md"]
+    },
+    {
+      "case_id": "retrieval-duplicate-replay-002",
+      "query": "batch identifier failed run replay append only idempotent upsert",
+      "relevant_document_ids": ["md:duplicate-records.md"]
+    },
+    {
+      "case_id": "retrieval-stale-partition-002",
+      "query": "latest partition stale last successful task late arriving data clock skew",
+      "relevant_document_ids": ["md:stale-input.md"]
+    },
+    {
+      "case_id": "retrieval-impact-analysis-002",
+      "query": "task failed timeout downstream consumers task run identifier affected lineage",
+      "relevant_document_ids": ["md:task-failure-and-lineage.md"]
+    },
+    {
+      "case_id": "retrieval-schema-compatibility-002",
+      "query": "source schema field rename incompatible type consumer contract compare snapshot",
+      "relevant_document_ids": ["md:schema-drift.md"]
+    },
+    {
+      "case_id": "retrieval-row-divergence-002",
+      "query": "find earliest divergence compare counts filters partition join rows dropped",
+      "relevant_document_ids": ["md:row-count-mismatch.md"]
+    }
+  ]
+}
