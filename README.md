@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Release candidate: v0.3.0; latest published release: v0.2.0.** The candidate adds persistent hybrid-embedding caching, optional Bearer authentication for the read-only API, pre-parse request body limits, and prompt-injection regression coverage. It remains a deterministic/offline-first system; hosted chat and hybrid embeddings are opt-in. The versioned GitHub Release is published only after CI, benchmark generation, package validation, and installed-wheel smoke testing succeed. The project does not publish to PyPI.
+**Released: [v0.3.0](https://github.com/peymanpro/Multi-Agent-RAG-for-Data-Pipeline-Root-Cause-Analysis/releases/tag/v0.3.0).** The automated Release workflow completed successfully after lint, static type-checking, tests, all three benchmark generators, source/wheel packaging and metadata checks, and an installed-wheel smoke test. Release assets include the Python wheel, source distribution, diagnostic/retrieval/investigation reports, and SHA-256 checksums. Hybrid embeddings and model-assisted reasoning remain opt-in; BM25 and deterministic diagnostics work offline. API Bearer auth is an optional shared token, not per-user RBAC. The project does not publish to PyPI.
 
 ## Problem
 
