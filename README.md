@@ -123,6 +123,26 @@ The initial implementation targets Python 3.12+, typed domain models, pytest, Ru
 - [ ] **P6 — API and operational quality:** API contracts, containerized local run, observability, and reproducible examples.
 - [ ] **P7 — Release engineering:** CI, automated version validation, release notes/artifacts, and a verified GitHub Release.
 
+## Run the current deterministic core
+
+Install the package and development tools:
+
+```bash
+python -m pip install -e ".[dev]"
+pytest -q
+ruff check .
+mypy
+```
+
+Run the offline schema-drift example:
+
+```bash
+pipeline-rca examples/cases/schema-drift.json
+# or: python -m pipeline_rca examples/cases/schema-drift.json
+```
+
+Freshness checks intentionally require an explicit timezone-aware `--as-of` timestamp so results do not silently depend on the machine clock. The current CLI runs deterministic diagnostics only; it does not yet invoke a language model or claim a confirmed causal root cause.
+
 ## Architecture and benchmark contracts
 
 - [Architecture](docs/architecture.md) — layer boundaries, evidence flow, budgets, failure handling, and security constraints.
