@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Stage: deterministic diagnostics, synthetic benchmark v1, lexical retrieval, and bounded multi-agent investigation are merged to main; retrieval relevance evaluation is in progress and release automation remains pending.** The default path runs offline; model-assisted generation and review are explicit opt-ins. A feature is considered complete only after CI and its acceptance tests pass.
+**Implemented capabilities:** deterministic diagnostics, a seven-case synthetic benchmark, provenance-aware BM25 retrieval, bounded multi-agent investigation, retrieval relevance and end-to-end evaluation, and an optional read-only HTTP API. Dense/hybrid retrieval and hosted-model calls are opt-in; the default investigation path remains offline. GitHub Release automation validates version tags, tests, and package artifacts; the first versioned release is not claimed until its release workflow succeeds.
 
 ## Problem
 
@@ -72,7 +72,7 @@ Incident / User Question
  Cited Incident Report + Evaluation Trace
 ```
 
-This diagram represents the implemented investigation path. Dense semantic retrieval, a hosted HTTP API, and production integrations remain separate future work.
+This diagram represents the implemented investigation path. The API is optional and read-only; hybrid retrieval requires an explicitly configured embedding provider. Production-system integrations and automated remediation remain out of scope.
 
 ## Repository layout
 
@@ -114,16 +114,15 @@ The initial implementation targets Python 3.12+, typed domain models, pytest, Ru
 
 ## Development roadmap
 
-- [x] **P0 — Charter and benchmark specification:** problem boundary, scenario schema, leakage controls, and evaluation protocol documented.
-- [x] **P1 — Deterministic investigation core:** typed evidence, incident cases, schema/freshness/duplicate/row-count checks, lineage traversal, CLI, and unit tests.
-- [x] **P2 — Reproducible synthetic benchmark v1:** seven versioned scenarios, separated runtime/evaluator files, metrics, CLI, and integration tests.
-- [x] **P3 — Evidence retrieval baseline:** local Markdown ingestion, structure-aware chunking, deterministic BM25, stable source references, five runbooks, and tests.
-- [x] **P4 — Bounded multi-agent workflow:** specialist diagnostics, optional model-based hypothesis generation and counter-evidence review, budgets, trace, fallback, and final citation-reference verification (pending merge/CI on the feature branch).
-- [ ] **P5 — Evaluation and security:** RAG-only and single-agent comparisons, adversarial inputs, abstention tests, and regression gates.
-- [ ] **P6 — API and operational quality:** API contracts, containerized local run, observability, and reproducible examples.
-- [ ] **P5 — Evaluation and security:** retrieval relevance benchmark, agent-vs-baseline comparison, prompt-injection and abstention cases.
-- [ ] **P6 — API and operational quality:** optional HTTP API, containerized local run, observability, and integration examples.
-- [ ] **P7 — Release engineering:** automated version validation, package artifacts, release notes, and a verified GitHub Release.
+- [x] **P0 — Problem and evaluation contract:** incident schema, data boundaries, benchmark protocol, and leakage controls.
+- [x] **P1 — Deterministic investigation core:** typed cases/evidence, data-quality checks, lineage traversal, CLI, and unit tests.
+- [x] **P2 — Synthetic diagnostic benchmark:** versioned scenarios with separate runtime inputs and evaluator-only truth.
+- [x] **P3 — Evidence retrieval:** Markdown ingestion, stable chunks, source-line provenance, BM25, and hand-judged retrieval relevance.
+- [x] **P4 — Bounded multi-agent investigation:** specialist roles, budgets, trace, model opt-in, deterministic fallback, and evidence-reference verification.
+- [x] **P5 — Evaluation:** deterministic-versus-agent benchmark, retrieval metrics, abstention-related cases, and reproducible per-case reports.
+- [x] **P6 — Optional API and local operations:** bounded read-only FastAPI endpoint, health/readiness checks, Docker image, Compose, and API contract tests.
+- [x] **P7 — Release engineering foundation:** version validation, package build and metadata checks, benchmark artifacts, checksums, and GitHub Release automation. The release is complete only after a tagged workflow succeeds.
+- [ ] **P8 — Security and production hardening:** broader prompt-injection regression suite, authentication/authorization for shared deployments, telemetry, persistent embedding cache, and production connectors.
 
 ## Run the current deterministic core
 
@@ -212,12 +211,25 @@ Run the offline comparison between the original deterministic diagnostics baseli
 
 The report includes root-cause class Top-1/Top-k metrics, MRR, clean-case abstention, finding-code detection, affected-node detection, evidence-reference integrity, per-case timings, and exact labels for each synthetic case. Both execution paths run before each evaluator truth file is read. Results do not involve an LLM and do not establish production root-cause accuracy.
 
+## Dense and hybrid retrieval (optional)
+
+The default remains offline BM25. To enable hybrid retrieval, configure `RCA_API_KEY`, `RCA_EMBEDDING_MODEL`, and optionally `RCA_API_BASE_URL`, then run:
+
+```bash
+pipeline-rca-investigate examples/cases/schema-drift.json --retrieval-mode hybrid
+```
+
+Hybrid retrieval combines BM25 and cosine-similarity ranking with reciprocal-rank fusion (RRF). The current implementation embeds the local chunks each time the hybrid corpus is constructed and does not persist an embedding cache; provider latency and cost therefore need to be considered. The CI path uses test doubles and does not require API credentials. See [hybrid retrieval design](docs/hybrid-retrieval.md).
+
 ## Architecture and benchmark contracts
 
 - [Architecture](docs/architecture.md) — deterministic core, evidence flow, budgets, failure handling, and security constraints.
 - [Agent orchestration](docs/agent-orchestration.md) — specialist roles, model boundary, counter-evidence review, trace, and limitations.
 - [Retrieval design](docs/retrieval.md) — chunking, BM25, provenance, and retrieval limitations.
+- [Hybrid retrieval](docs/hybrid-retrieval.md) — optional embeddings, cosine similarity, RRF, and provider constraints.
+- [Read-only API](docs/api.md) — HTTP contracts, bounds, and local deployment safeguards.
 - [Benchmark design](docs/benchmark-design.md) — scenario contract, ground-truth separation, metrics, and release gate.
+- [Release process](docs/releasing.md) — tag validation and release artifacts.
 - [Contributing](CONTRIBUTING.md) — small changes, verification expectations, and review workflow.
 
 ## Contributing and quality gates
