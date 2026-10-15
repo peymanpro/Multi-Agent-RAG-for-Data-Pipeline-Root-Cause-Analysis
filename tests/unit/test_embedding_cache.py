@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
+import stat
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -163,3 +165,13 @@ def test_cache_rejects_invalid_configuration(tmp_path: Path) -> None:
             namespace="test",
             max_batch_size=0,
         )
+
+
+def test_cache_file_has_owner_only_permissions_on_posix(tmp_path: Path) -> None:
+    if os.name != "posix":
+        pytest.skip("POSIX file permission semantics are not available")
+
+    cache_path = tmp_path / "embeddings.sqlite3"
+    _cache(CountingProvider(), cache_path).embed_texts(("sensitive derived embedding",))
+
+    assert stat.S_IMODE(cache_path.stat().st_mode) == 0o600
