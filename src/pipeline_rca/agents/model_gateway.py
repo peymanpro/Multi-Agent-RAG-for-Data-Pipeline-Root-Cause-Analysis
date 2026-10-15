@@ -58,7 +58,9 @@ class OpenAICompatibleChatModel:
         self._timeout_seconds = timeout_seconds
 
     @classmethod
-    def from_env(cls) -> OpenAICompatibleChatModel:
+    def from_env(
+        cls, *, timeout_seconds: float = 20.0
+    ) -> OpenAICompatibleChatModel:
         """Create the adapter from RCA_API_KEY, RCA_MODEL, and optional RCA_API_BASE_URL."""
         api_key = os.environ.get("RCA_API_KEY", "")
         model = os.environ.get("RCA_MODEL", "")
@@ -67,7 +69,12 @@ class OpenAICompatibleChatModel:
             raise ValueError("RCA_API_KEY is required to enable model-assisted investigation")
         if not model:
             raise ValueError("RCA_MODEL is required to enable model-assisted investigation")
-        return cls(api_key=api_key, model=model, base_url=base_url)
+        return cls(
+            api_key=api_key,
+            model=model,
+            base_url=base_url,
+            timeout_seconds=timeout_seconds,
+        )
 
     def complete(
         self,
