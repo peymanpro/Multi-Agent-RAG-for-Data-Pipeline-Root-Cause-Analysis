@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from pipeline_rca.api.app import create_app
+from pipeline_rca.api.rate_limit import InMemoryRateLimitStore, RateLimitBackendError
 
 ROOT = Path(__file__).resolve().parents[2]
 RUNBOOKS = ROOT / "data" / "runbooks"
@@ -146,6 +147,46 @@ def test_production_mode_fails_closed_without_identity_configuration(
 def test_bearer_auth_rejects_weak_or_malformed_tokens(token: str, message: str) -> None:
     with pytest.raises(ValueError, match=message):
         create_app(runbooks_dir=RUNBOOKS, auth_token=token)
+
+
+def test_api_rate_limits_repeated_investigations(client: TestClient) -> None:
+    case = json.loads(CASE_FILE.read_text(encoding="utf-8"))
+    limited_app = TestClient(
+        create_app(
+            runbooks_dir=RUNBOOKS,
+            rate_limit_store=InMemoryRateLimitStore(),
+            rate_limit_requests=1,
+            rate_limit_window_seconds=60,
+        )
+    )
+    try:
+        first = limited_app.post("/v1/investigations", json={"case": case})
+        second = limited_app.post("/v1/investigations", json={"case": case})
+    finally:
+        limited_app.close()
+
+    assert first.status_code == 200
+    assert first.headers["x-ratelimit-limit"] == "1"
+    assert second.status_code == 429
+    assert second.headers["retry-after"]
+    assert second.json()["detail"] == "request rate limit exceeded"
+
+
+def test_api_fails_closed_when_rate_limit_backend_is_unavailable() -> None:
+    class BrokenRateLimitStore:
+        is_distributed = True
+
+        async def consume(self, identity: str, *, limit: int, window_seconds: int):
+            raise RateLimitBackendError("simulated backend failure")
+
+    case = json.loads(CASE_FILE.read_text(encoding="utf-8"))
+    with TestClient(
+        create_app(runbooks_dir=RUNBOOKS, rate_limit_store=BrokenRateLimitStore())
+    ) as limited_client:
+        response = limited_client.post("/v1/investigations", json={"case": case})
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "rate-limit backend is unavailable"
 
 
 def test_api_rejects_hidden_benchmark_truth(client: TestClient) -> None:

@@ -115,5 +115,5 @@ Common responses:
 - `RCA_API_USERS_JSON` provides separate bearer tokens, subject identities, and explicit scopes. `RCA_API_AUTH_TOKEN` is retained only as a legacy single-subject compatibility mode.
 - The application emits structured JSON-line request telemetry with a validated/generated `X-Request-ID`, method, path (without query), status, duration, outcome, and authenticated subject. It intentionally excludes headers, query strings, request/response bodies, and token values.
 - The service does not mutate source datasets or run arbitrary SQL.
-- The included Compose configuration is local-only and does not by itself supply an OIDC identity provider, rate limiting, or TLS. Per-user tokens are a pragmatic service-level control, not a replacement for enterprise SSO/identity lifecycle. Do not expose the service directly to untrusted networks.
+- The included Compose configuration is local-only. The API applies a process-local rate limiter in development; multi-worker production mode requires Redis-backed limiting and per-user API credentials. Static API tokens are not a replacement for OIDC/SSO identity lifecycle. See [distributed rate limiting](rate-limiting.md) before configuring multiple workers. Do not expose the service directly to untrusted networks.
 - Readiness is a dependency signal, not a security control or production-availability guarantee.

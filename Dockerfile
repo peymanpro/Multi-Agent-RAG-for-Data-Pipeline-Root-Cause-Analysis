@@ -11,7 +11,7 @@ COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
 COPY data/runbooks ./data/runbooks
 
-RUN python -m pip install ".[api]" \
+RUN python -m pip install ".[api-redis]" \
     && groupadd --system --gid 10001 app \
     && useradd --system --uid 10001 --gid 10001 --home-dir /nonexistent \
        --shell /usr/sbin/nologin app \
