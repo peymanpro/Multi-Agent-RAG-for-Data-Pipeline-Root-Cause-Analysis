@@ -111,7 +111,10 @@ def create_app(*, runbooks_dir: str | Path | None = None) -> FastAPI:
         if payload.use_runbooks and current_corpus is None:
             raise HTTPException(
                 status_code=503,
-                detail="runbook retrieval is unavailable; set use_runbooks=false for diagnostics only",
+                detail=(
+                    "runbook retrieval is unavailable; set use_runbooks=false "
+                    "for diagnostics only"
+                ),
             )
 
         try:
