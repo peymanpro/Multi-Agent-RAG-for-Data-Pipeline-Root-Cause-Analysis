@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hmac
 import json
 import os
 from datetime import datetime
@@ -17,7 +16,9 @@ from starlette.middleware.base import RequestResponseEndpoint
 from pipeline_rca import __version__
 from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
 from pipeline_rca.agents.reporting import result_to_dict
+from pipeline_rca.api.auth import authenticate_bearer, configured_credentials
 from pipeline_rca.api.request_limits import RequestBodyLimitMiddleware
+from pipeline_rca.api.telemetry import RequestTelemetryMiddleware
 from pipeline_rca.retrieval.corpus import MarkdownCorpus
 from pipeline_rca.serialization import incident_case_from_mapping
 
@@ -58,20 +59,16 @@ def create_app(
     *,
     runbooks_dir: str | Path | None = None,
     auth_token: str | None = None,
+    users_json: str | None = None,
 ) -> FastAPI:
-    """Create a local read-only API; optional Bearer auth protects the investigation route."""
-    configured_token = (
-        auth_token
-        if auth_token is not None
-        else os.environ.get("RCA_API_AUTH_TOKEN")
-    )
-    if configured_token == "":
-        configured_token = None
-    elif configured_token is not None:
-        if configured_token.strip() != configured_token:
-            raise ValueError("RCA_API_AUTH_TOKEN must not contain surrounding whitespace")
-        if len(configured_token) < 32:
-            raise ValueError("RCA_API_AUTH_TOKEN must contain at least 32 characters")
+    """Create a read-only API with optional per-user bearer identities and scopes."""
+    credentials = configured_credentials(legacy_token=auth_token, users_json=users_json)
+    production_mode = os.environ.get("RCA_DEPLOYMENT_MODE", "development").lower() == "production"
+    auth_required = production_mode or os.environ.get("RCA_API_AUTH_REQUIRED", "").lower() in {
+        "1", "true", "yes"
+    }
+    if auth_required and not credentials:
+        raise ValueError("API authentication is required but no API users are configured")
     configured_path = (
         Path(runbooks_dir)
         if runbooks_dir is not None
@@ -93,6 +90,7 @@ def create_app(
         RequestBodyLimitMiddleware,
         max_body_bytes=_MAX_REQUEST_BODY_BYTES,
     )
+    application.add_middleware(RequestTelemetryMiddleware)
     application.state.runbook_corpus = corpus
     application.state.runbook_error = corpus_error
 
@@ -101,20 +99,38 @@ def create_app(
         request: Request,
         call_next: RequestResponseEndpoint,
     ) -> Response:
-        """Protect only the investigation endpoint; keep health probes public."""
-        if (
-            configured_token is not None
-            and request.method == "POST"
-            and request.url.path == "/v1/investigations"
-        ):
-            supplied = request.headers.get("authorization", "")
-            expected = f"Bearer {configured_token}"
-            if not hmac.compare_digest(supplied.encode("utf-8"), expected.encode("utf-8")):
+        """Authenticate investigation calls and enforce explicit subject scopes."""
+        is_investigation = (
+            request.method == "POST" and request.url.path == "/v1/investigations"
+        )
+        if not is_investigation:
+            return await call_next(request)
+
+        if credentials:
+            principal = authenticate_bearer(
+                request.headers.get("authorization", ""),
+                credentials,
+            )
+            if principal is None:
                 return JSONResponse(
                     status_code=401,
                     content={"detail": "valid Bearer authentication is required"},
                     headers={"WWW-Authenticate": "Bearer"},
                 )
+            request.state.principal = principal
+            request.scope.setdefault("state", {})["principal_subject"] = principal.subject
+            if "investigations:run" not in principal.scopes:
+                return JSONResponse(
+                    status_code=403,
+                    content={"detail": "the authenticated subject lacks investigations:run"},
+                )
+        elif auth_required:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "API identity configuration is unavailable"},
+            )
+        else:
+            request.scope.setdefault("state", {})["principal_subject"] = "anonymous"
         return await call_next(request)
 
     @application.get("/health/live", tags=["health"])

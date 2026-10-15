@@ -15,7 +15,30 @@ python -m pip install -e ".[api,dev]"
 uvicorn pipeline_rca.api.app:app --host 127.0.0.1 --port 8000
 ```
 
-The default runbook path is `data/runbooks`. Set `RCA_RUNBOOKS_DIR` to a readable local Markdown directory to override it. For authenticated local testing, set `RCA_API_AUTH_TOKEN` to a randomly generated token of at least 32 characters before starting the server. Interactive OpenAPI docs are available at `http://127.0.0.1:8000/docs`.
+The default runbook path is `data/runbooks`. Set `RCA_RUNBOOKS_DIR` to a readable local Markdown directory to override it. Interactive OpenAPI docs are available at `http://127.0.0.1:8000/docs`.
+
+### Per-user authentication and authorization
+
+For local single-token compatibility, `RCA_API_AUTH_TOKEN` remains supported. For per-user access, configure `RCA_API_USERS_JSON` as a protected runtime secret:
+
+```json
+[
+  {
+    "subject": "pipeline-operator",
+    "token": "replace-with-a-random-secret-at-least-32-characters",
+    "scopes": ["investigations:run", "connectors:read"]
+  },
+  {
+    "subject": "auditor",
+    "token": "use-a-different-random-secret-at-least-32-characters",
+    "scopes": ["telemetry:read"]
+  }
+]
+```
+
+Supported scopes are `investigations:run`, `connectors:read`, and `telemetry:read`. Subjects must be unique; tokens must be unique and at least 32 characters. Unknown scopes, duplicate identities, or combining the legacy shared token with the per-user registry cause startup failure. Secrets should be injected by an orchestrator/secret manager and never committed to Git or copied into logs.
+
+Set `RCA_DEPLOYMENT_MODE=production` (or `RCA_API_AUTH_REQUIRED=true`) to make the application fail at startup when no authentication credentials are configured. With credentials configured, health probes remain public, unauthenticated investigation requests receive 401, and authenticated users lacking `investigations:run` receive 403. This is static per-user API-token authorization, not a full OIDC/SSO integration; production identity lifecycle, revocation, and secret rotation remain operator responsibilities.
 
 ## Run with Docker Compose
 
@@ -76,7 +99,9 @@ The response includes deterministic diagnostic findings, ranked hypotheses, evid
 Common responses:
 
 - `200`: the investigation completed or returned a partial/insufficient-evidence report.
-- `401`: a configured Bearer token was absent or invalid. Authentication is disabled when `RCA_API_AUTH_TOKEN` is unset; health endpoints remain public for probes.
+- `401`: a configured Bearer token was absent or invalid.
+- `403`: the authenticated principal does not have the `investigations:run` scope.
+- `503`: runbook retrieval was requested but its corpus is unavailable.
 - `413`: the serialized case payload exceeds the application limit.
 - `422`: request schema or incident contract validation failed.
 - `503`: runbook retrieval was requested but its corpus is unavailable.
@@ -87,8 +112,8 @@ Common responses:
 - The request schema forbids unknown top-level request fields and strict incident parsing rejects hidden evaluator labels.
 - The ASGI boundary rejects investigation HTTP bodies larger than 300,000 bytes before JSON parsing, including streamed bodies without a Content-Length header.
 - After parsing, the serialized observable case is separately limited to 256,000 Unicode characters.
-- When configured, `RCA_API_AUTH_TOKEN` protects `POST /v1/investigations` using a Bearer header and constant-time comparison. Tokens shorter than 32 characters or with surrounding whitespace are rejected at startup. Health endpoints remain public.
-- This is a single shared token, not per-user authentication, tenant isolation, or role-based authorization. For shared/untrusted deployments, use an identity-aware gateway or implement a reviewed identity/authorization layer; rotate secrets and use TLS.
+- `RCA_API_USERS_JSON` provides separate bearer tokens, subject identities, and explicit scopes. `RCA_API_AUTH_TOKEN` is retained only as a legacy single-subject compatibility mode.
+- The application emits structured JSON-line request telemetry with a validated/generated `X-Request-ID`, method, path (without query), status, duration, outcome, and authenticated subject. It intentionally excludes headers, query strings, request/response bodies, and token values.
 - The service does not mutate source datasets or run arbitrary SQL.
-- The included Compose configuration is local-only. Bearer authentication is optional and can be enabled through `RCA_API_AUTH_TOKEN`, but user-level authorization, rate limiting, and TLS are not implemented. Do not expose the service directly to untrusted networks. Put it behind an authenticated gateway and apply deployment-specific resource limits before any shared deployment.
+- The included Compose configuration is local-only and does not by itself supply an OIDC identity provider, rate limiting, or TLS. Per-user tokens are a pragmatic service-level control, not a replacement for enterprise SSO/identity lifecycle. Do not expose the service directly to untrusted networks.
 - Readiness is a dependency signal, not a security control or production-availability guarantee.

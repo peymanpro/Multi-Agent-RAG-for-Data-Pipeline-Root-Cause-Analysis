@@ -85,6 +85,57 @@ def test_bearer_auth_protects_investigation_but_keeps_health_probes_public() -> 
     assert valid.json()["case_id"] == "example-schema-drift-001"
 
 
+def test_user_scopes_allow_or_deny_investigation_per_subject() -> None:
+    investigator_token = "investigator-token-" + ("i" * 32)
+    reader_token = "reader-token-" + ("r" * 32)
+    users = json.dumps(
+        [
+            {
+                "subject": "pipeline-operator",
+                "token": investigator_token,
+                "scopes": ["investigations:run"],
+            },
+            {
+                "subject": "telemetry-reader",
+                "token": reader_token,
+                "scopes": ["telemetry:read"],
+            },
+        ]
+    )
+    case = json.loads(CASE_FILE.read_text(encoding="utf-8"))
+
+    with TestClient(create_app(runbooks_dir=RUNBOOKS, users_json=users)) as scoped_client:
+        permitted = scoped_client.post(
+            "/v1/investigations",
+            json={"case": case},
+            headers={
+                "Authorization": f"Bearer {investigator_token}",
+                "X-Request-ID": "scope-test-1",
+            },
+        )
+        denied = scoped_client.post(
+            "/v1/investigations",
+            json={"case": case},
+            headers={"Authorization": f"Bearer {reader_token}"},
+        )
+
+    assert permitted.status_code == 200
+    assert permitted.headers["x-request-id"] == "scope-test-1"
+    assert denied.status_code == 403
+    assert denied.json()["detail"] == "the authenticated subject lacks investigations:run"
+
+
+def test_production_mode_fails_closed_without_identity_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("RCA_DEPLOYMENT_MODE", "production")
+    monkeypatch.delenv("RCA_API_AUTH_TOKEN", raising=False)
+    monkeypatch.delenv("RCA_API_USERS_JSON", raising=False)
+
+    with pytest.raises(ValueError, match="authentication is required"):
+        create_app(runbooks_dir=RUNBOOKS)
+
+
 @pytest.mark.parametrize(
     ("token", "message"),
     [
