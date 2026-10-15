@@ -13,7 +13,7 @@ from pipeline_rca.agents.models import AgentBudget
 from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
 from pipeline_rca.agents.reporting import result_to_dict
 from pipeline_rca.models import IncidentCase
-from pipeline_rca.retrieval.corpus import MarkdownCorpus
+from pipeline_rca.retrieval.corpus import MarkdownCorpus, SearchableCorpus
 from pipeline_rca.retrieval.embeddings import OpenAICompatibleEmbeddingProvider
 from pipeline_rca.retrieval.hybrid_corpus import HybridMarkdownCorpus
 from pipeline_rca.serialization import incident_case_from_mapping
@@ -97,7 +97,7 @@ def main(argv: list[str] | None = None) -> int:
             model_timeout_seconds=args.model_timeout_seconds,
             model_max_output_tokens=args.model_max_output_tokens,
         )
-        corpus = None
+        corpus: SearchableCorpus | None = None
         if args.no_runbooks and args.retrieval_mode != "bm25":
             raise ValueError("--retrieval-mode hybrid cannot be combined with --no-runbooks")
         if not args.no_runbooks and args.retrieval_mode == "bm25":
