@@ -10,7 +10,11 @@ class RequestBodyLimitMiddleware:
     """Buffer only a bounded investigation body and reject oversized requests early."""
 
     def __init__(self, app: ASGIApp, *, max_body_bytes: int) -> None:
-        if isinstance(max_body_bytes, bool) or max_body_bytes < 1:
+        if (
+            isinstance(max_body_bytes, bool)
+            or not isinstance(max_body_bytes, int)
+            or max_body_bytes < 1
+        ):
             raise ValueError("max_body_bytes must be a positive integer")
         self.app = app
         self.max_body_bytes = max_body_bytes
