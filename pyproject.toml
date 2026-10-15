@@ -41,6 +41,7 @@ dev = [
 [project.scripts]
 pipeline-rca = "pipeline_rca.cli:main"
 pipeline-rca-search = "pipeline_rca.retrieval.cli:main"
+pipeline-rca-investigate = "pipeline_rca.agents.cli:main"
 pipeline-rca-benchmark = "pipeline_rca.evaluation.benchmark:main"
 
 [tool.setuptools.packages.find]
