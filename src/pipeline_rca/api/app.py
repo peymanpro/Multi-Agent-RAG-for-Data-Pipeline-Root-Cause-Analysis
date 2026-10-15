@@ -95,7 +95,10 @@ def create_app(
 ) -> FastAPI:
     """Create a read-only API with optional per-user bearer identities and scopes."""
     credentials = configured_credentials(legacy_token=auth_token, users_json=users_json)
-    production_mode = os.environ.get("RCA_DEPLOYMENT_MODE", "development").lower() == "production"
+    deployment_mode = os.environ.get("RCA_DEPLOYMENT_MODE", "development").strip().lower()
+    if deployment_mode not in {"development", "production"}:
+        raise ValueError("RCA_DEPLOYMENT_MODE must be either 'development' or 'production'")
+    production_mode = deployment_mode == "production"
     auth_required = production_mode or os.environ.get("RCA_API_AUTH_REQUIRED", "").lower() in {
         "1", "true", "yes"
     }

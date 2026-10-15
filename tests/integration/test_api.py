@@ -129,11 +129,25 @@ def test_user_scopes_allow_or_deny_investigation_per_subject() -> None:
 def test_production_mode_fails_closed_without_identity_configuration(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("RCA_DEPLOYMENT_MODE", "production")
+    monkeypatch.setenv("RCA_DEPLOYMENT_MODE", " Production ")
     monkeypatch.delenv("RCA_API_AUTH_TOKEN", raising=False)
     monkeypatch.delenv("RCA_API_USERS_JSON", raising=False)
 
     with pytest.raises(ValueError, match="authentication is required"):
+        create_app(runbooks_dir=RUNBOOKS)
+
+
+@pytest.mark.parametrize("mode", ["prod", "staging", "", "production-like"])
+def test_unknown_deployment_mode_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+    mode: str,
+) -> None:
+    monkeypatch.setenv("RCA_DEPLOYMENT_MODE", mode)
+    monkeypatch.delenv("RCA_API_AUTH_TOKEN", raising=False)
+    monkeypatch.delenv("RCA_API_USERS_JSON", raising=False)
+    monkeypatch.delenv("RCA_RATE_LIMIT_REDIS_URL", raising=False)
+
+    with pytest.raises(ValueError, match="RCA_DEPLOYMENT_MODE must be either"):
         create_app(runbooks_dir=RUNBOOKS)
 
 
