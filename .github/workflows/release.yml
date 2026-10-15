@@ -48,6 +48,7 @@ jobs:
         run: |
           mkdir -p release-assets
           pipeline-rca-benchmark --output release-assets/diagnostic-benchmark.json
+          pipeline-rca-evaluate-retrieval --output release-assets/retrieval-benchmark.json
 
       - name: Build source and wheel distributions
         run: python -m build --outdir dist
@@ -60,7 +61,7 @@ jobs:
           cp dist/* release-assets/
           (
             cd release-assets
-            sha256sum *.whl *.tar.gz diagnostic-benchmark.json > SHA256SUMS
+            sha256sum *.whl *.tar.gz *.json > SHA256SUMS
           )
 
       - name: Publish GitHub Release with generated notes
@@ -81,6 +82,6 @@ jobs:
             echo "- Tag matched `pyproject.toml`."
             echo "- Ruff, mypy, and pytest passed."
             echo "- Source distribution and wheel passed `twine check`."
-            echo "- Diagnostic benchmark evidence and SHA-256 checksums were attached."
+            echo "- Diagnostic and retrieval benchmark evidence and SHA-256 checksums were attached."
             echo "- GitHub-generated release notes were published."
           } >> "$GITHUB_STEP_SUMMARY"
