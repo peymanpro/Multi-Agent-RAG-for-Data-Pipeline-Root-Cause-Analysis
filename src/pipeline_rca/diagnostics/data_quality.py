@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pipeline_rca.models import (
     DatasetObservation,
@@ -21,7 +21,7 @@ def _parse_timestamp(value: str) -> datetime:
     parsed = datetime.fromisoformat(normalized)
     if parsed.tzinfo is None:
         raise ValueError(f"Timestamp must include a UTC offset: {value!r}")
-    return parsed.astimezone(timezone.utc)
+    return parsed.astimezone(UTC)
 
 
 def _evidence_ids(dataset: DatasetObservation) -> tuple[str, ...]:
