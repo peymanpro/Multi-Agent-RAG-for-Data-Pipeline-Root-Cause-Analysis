@@ -17,6 +17,7 @@ from pipeline_rca.retrieval.corpus import MarkdownCorpus
 from pipeline_rca.serialization import incident_case_from_mapping
 
 
+
 def _default_runbooks_dir() -> Path:
     """Prefer the repository corpus, falling back to runbooks packaged in the wheel."""
     repository_corpus = Path("data/runbooks")
