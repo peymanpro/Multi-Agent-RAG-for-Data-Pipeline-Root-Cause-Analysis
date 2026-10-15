@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -54,7 +54,7 @@ def test_freshness_is_checked_only_against_explicit_timezone_aware_time() -> Non
 
     findings = diagnose_data_quality(
         case,
-        as_of=datetime(2026, 10, 15, 10, 2, tzinfo=timezone.utc),
+        as_of=datetime(2026, 10, 15, 10, 2, tzinfo=UTC),
     )
 
     assert len(findings) == 1
