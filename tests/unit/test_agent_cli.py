@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
-
-import pytest
+from typing import Any
 
 from pipeline_rca.agents.cli import main
 
@@ -11,7 +10,7 @@ CASE_PATH = ROOT / "examples" / "cases" / "schema-drift.json"
 
 
 def test_investigation_cli_emits_traceable_report(
-    capsys: pytest.CaptureFixture[str],
+    capsys: Any,
 ) -> None:
     assert main([str(CASE_PATH), "--no-runbooks"]) == 0
     report = json.loads(capsys.readouterr().out)
