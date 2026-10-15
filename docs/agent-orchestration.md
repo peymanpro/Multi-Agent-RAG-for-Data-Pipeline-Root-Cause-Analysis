@@ -30,6 +30,10 @@ The orchestrator reserves the final available agent step for evidence verificati
 
 A model-assisted investigation normally makes at most two model calls: one for hypothesis generation and one for counter-evidence review. The model-call budget is explicit and can be lowered. No model call occurs unless the with-model option is passed to the CLI.
 
+## Retrieval mode
+
+The default retrieval mode is offline BM25. The CLI can also opt into lexical+dense hybrid retrieval with `--retrieval-mode hybrid`; this requires `RCA_API_KEY`, `RCA_EMBEDDING_MODEL`, and optionally `RCA_API_BASE_URL`. The hybrid corpus embeds local runbook chunks when it is built, so repeated CLI runs may incur repeated embedding cost because no persistent cache is implemented yet. The final verifier treats retrieved runbooks as context, never as proof of an incident-specific event. See [hybrid retrieval design](hybrid-retrieval.md).
+
 ## Model provider configuration
 
 The provider adapter uses the OpenAI-compatible chat-completions contract with the Python standard library. Configure these environment variables at runtime:
