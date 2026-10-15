@@ -83,5 +83,5 @@ def test_naive_event_timestamp_is_rejected_when_freshness_is_evaluated() -> None
     with pytest.raises(ValueError, match="UTC offset"):
         diagnose_data_quality(
             case,
-            as_of=datetime(2026, 10, 15, 10, 2, tzinfo=timezone.utc),
+            as_of=datetime(2026, 10, 15, 10, 2, tzinfo=UTC),
         )
