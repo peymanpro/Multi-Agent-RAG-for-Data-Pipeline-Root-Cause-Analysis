@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import pytest
@@ -25,45 +26,49 @@ class FakeRedis:
         return [self.count, 45_000]
 
 
-@pytest.mark.asyncio
-async def test_in_memory_limiter_enforces_a_fixed_window() -> None:
+def test_in_memory_limiter_enforces_a_fixed_window() -> None:
+    async def scenario() -> None:
     now = [120.0]
     store = InMemoryRateLimitStore(clock=lambda: now[0])
 
-    first = await store.consume("subject:alice", limit=2, window_seconds=60)
-    second = await store.consume("subject:alice", limit=2, window_seconds=60)
-    third = await store.consume("subject:alice", limit=2, window_seconds=60)
+        first = await store.consume("subject:alice", limit=2, window_seconds=60)
+        second = await store.consume("subject:alice", limit=2, window_seconds=60)
+        third = await store.consume("subject:alice", limit=2, window_seconds=60)
 
-    assert first.allowed is True
-    assert second.allowed is True
-    assert third.allowed is False
-    assert third.remaining == 0
-    assert third.retry_after_seconds == 60
+        assert first.allowed is True
+        assert second.allowed is True
+        assert third.allowed is False
+        assert third.remaining == 0
+        assert third.retry_after_seconds == 60
 
-    now[0] = 180.0
-    reset = await store.consume("subject:alice", limit=2, window_seconds=60)
-    assert reset.allowed is True
-    assert reset.remaining == 1
+        now[0] = 180.0
+        reset = await store.consume("subject:alice", limit=2, window_seconds=60)
+        assert reset.allowed is True
+        assert reset.remaining == 1
+
+    asyncio.run(scenario())
 
 
-@pytest.mark.asyncio
-async def test_redis_limiter_uses_atomic_script_and_hashed_identity() -> None:
+def test_redis_limiter_uses_atomic_script_and_hashed_identity() -> None:
+    async def scenario() -> None:
     client = FakeRedis()
     store = RedisRateLimitStore(client)
 
-    first = await store.consume("subject:private-user", limit=1, window_seconds=60)
-    second = await store.consume("subject:private-user", limit=1, window_seconds=60)
+        first = await store.consume("subject:private-user", limit=1, window_seconds=60)
+        second = await store.consume("subject:private-user", limit=1, window_seconds=60)
 
-    assert first.allowed is True
-    assert second.allowed is False
-    assert len(client.calls) == 2
-    script, numkeys, args = client.calls[0]
-    assert "INCR" in script and "PEXPIRE" in script
-    assert numkeys == 1
-    assert "private-user" not in str(args[0])
-    assert len(str(args[0]).rsplit(":", maxsplit=1)[-1]) == 10
-    assert args[1] == 60_000
-    assert second.retry_after_seconds == 45
+        assert first.allowed is True
+        assert second.allowed is False
+        assert len(client.calls) == 2
+        script, numkeys, args = client.calls[0]
+        assert "INCR" in script and "PEXPIRE" in script
+        assert numkeys == 1
+        assert "private-user" not in str(args[0])
+        assert len(str(args[0]).rsplit(":", maxsplit=1)[-1]) == 10
+        assert args[1] == 60_000
+        assert second.retry_after_seconds == 45
+
+    asyncio.run(scenario())
 
 
 def test_production_mode_requires_distributed_rate_limit_backend() -> None:
