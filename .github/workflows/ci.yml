@@ -34,5 +34,21 @@ jobs:
         run: mypy
       - name: Test
         run: pytest -q
+      - name: Run reproducible offline evaluations
+        run: |
+          mkdir -p evaluation-artifacts
+          pipeline-rca-benchmark --output evaluation-artifacts/diagnostic-benchmark.json
+          pipeline-rca-evaluate-retrieval --output evaluation-artifacts/retrieval-benchmark.json
+          pipeline-rca-evaluate-investigation --output evaluation-artifacts/investigation-benchmark.json
+
+      - name: Upload evaluation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-reports
+          path: evaluation-artifacts/*.json
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Build optional API container
         run: docker build --tag pipeline-rca-api:ci .
