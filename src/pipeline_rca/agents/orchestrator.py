@@ -28,7 +28,7 @@ from pipeline_rca.agents.specialists import (
 from pipeline_rca.agents.synthesis import DeterministicHypothesisAgent
 from pipeline_rca.agents.verification import EvidenceVerifierAgent
 from pipeline_rca.models import DiagnosticFinding, EvidenceRecord, IncidentCase, Severity
-from pipeline_rca.retrieval.corpus import MarkdownCorpus
+from pipeline_rca.retrieval.corpus import SearchableCorpus
 from pipeline_rca.retrieval.models import RetrievalHit
 
 
@@ -38,7 +38,7 @@ class InvestigationOrchestrator:
     def __init__(
         self,
         *,
-        corpus: MarkdownCorpus | None = None,
+        corpus: SearchableCorpus | None = None,
         model: ChatModel | None = None,
         budget: AgentBudget | None = None,
     ) -> None:
