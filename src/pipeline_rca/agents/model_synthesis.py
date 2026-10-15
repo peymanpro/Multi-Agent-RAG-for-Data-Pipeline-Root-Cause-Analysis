@@ -70,7 +70,7 @@ def _build_prompt_payload(
     runbooks = [item for item in unique_evidence if item.kind == "retrieved_document_chunk"]
     incident_rows = [_evidence_payload(item) for item in observed[:20]]
     runbook_rows = [_evidence_payload(item, max_summary_chars=450) for item in runbooks[:5]]
-    finding_rows = [
+    finding_rows: list[dict[str, Any]] = [
         {
             "code": item.code,
             "fault_class": item.fault_class.value,
