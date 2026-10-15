@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Stage: project bootstrap.** The repository is being built incrementally from a documented problem definition toward a tested, reproducible release. A feature is considered implemented only after its code, tests, and evidence are committed. Release badges and planned capabilities do not imply that later phases already exist.
+**Stage: deterministic core implemented; benchmark v1 in development.** The project is built incrementally from a documented problem definition toward a tested, reproducible release. A feature is considered implemented only after its code, tests, and evidence are committed. Release badges and planned capabilities do not imply that later phases already exist.
 
 ## Problem
 
@@ -114,8 +114,8 @@ The initial implementation targets Python 3.12+, typed domain models, pytest, Ru
 
 ## Development roadmap
 
-- [ ] **P0 — Charter and benchmark specification:** define the problem boundary, scenario schema, leakage controls, and evaluation protocol.
-- [ ] **P1 — Deterministic investigation core:** typed evidence, incident cases, schema/freshness/duplicate/row-count checks, lineage traversal, and unit tests.
+- [x] **P0 — Charter and benchmark specification:** problem boundary, scenario schema, leakage controls, and evaluation protocol documented.
+- [x] **P1 — Deterministic investigation core:** typed evidence, incident cases, schema/freshness/duplicate/row-count checks, lineage traversal, CLI, and unit tests.
 - [ ] **P2 — Reproducible synthetic benchmark:** fault injection, hidden ground truth, baseline runner, and machine-readable reports.
 - [ ] **P3 — Evidence retrieval:** structure-aware ingestion, lexical/hybrid retrieval interfaces, source provenance, and citation checks.
 - [ ] **P4 — Bounded multi-agent workflow:** task contracts, routing, budgets, timeouts, recovery, and traceable evidence hand-offs.
@@ -142,6 +142,23 @@ pipeline-rca examples/cases/schema-drift.json
 ```
 
 Freshness checks intentionally require an explicit timezone-aware `--as-of` timestamp so results do not silently depend on the machine clock. The current CLI runs deterministic diagnostics only; it does not yet invoke a language model or claim a confirmed causal root cause.
+
+## Run the deterministic benchmark
+
+Install the package and run the offline benchmark:
+
+```bash
+python -m pip install -e ".[dev]"
+pipeline-rca-benchmark
+```
+
+The default benchmark directory is `data/benchmark/v1`. To save the machine-readable report:
+
+```bash
+pipeline-rca-benchmark data/benchmark/v1 --output artifacts/benchmark-v1.json
+```
+
+The runner evaluates the deterministic diagnostic baseline only. It reports fault-class detection, finding-code detection, affected-node detection, evidence-reference validity, and per-case runtime. These measurements do **not** claim language-model root-cause accuracy. See [benchmark design](docs/benchmark-design.md) for the case contract, metrics, leakage boundaries, and limitations.
 
 ## Architecture and benchmark contracts
 
