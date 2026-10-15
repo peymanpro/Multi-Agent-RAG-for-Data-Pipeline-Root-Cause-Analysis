@@ -8,6 +8,7 @@ from time import perf_counter
 
 from pipeline_rca.agents.model_gateway import ChatModel
 from pipeline_rca.agents.model_synthesis import HypothesisAgentError, ModelHypothesisAgent
+from pipeline_rca.agents.model_review import ModelCounterEvidenceReviewer, ModelReviewError
 from pipeline_rca.agents.models import (
     AgentBudget,
     AgentTraceEvent,
@@ -44,6 +45,7 @@ class InvestigationOrchestrator:
         self._corpus = corpus
         self._budget = budget or AgentBudget()
         self._model_agent = ModelHypothesisAgent(model) if model is not None else None
+        self._review_agent = ModelCounterEvidenceReviewer(model) if model is not None else None
         self._schema_agent = SchemaInvestigator()
         self._quality_agent = DataQualityInvestigator()
         self._task_agent = TaskFailureInvestigator()
@@ -72,7 +74,10 @@ class InvestigationOrchestrator:
         partial = False
         budget_exhausted = False
         model_assisted = False
+        model_reviewed = False
+        model_calls = 0
         synthesis_detail = "Ranked hypotheses from deterministic findings."
+        review_detail = "Model review was not configured."
 
         def execute(
             *,
@@ -103,6 +108,14 @@ class InvestigationOrchestrator:
                         summary=f"Agent {agent!r} could not complete action {action!r}.",
                     )
                 )
+            if agent == self._retrieval_agent.name:
+                output_refs = tuple(hit.chunk.chunk_id for hit in hits)
+            elif agent in {"hypothesis-synthesis-agent", "model-counterevidence-reviewer"}:
+                output_refs = tuple(item.fault_class.value for item in hypotheses)
+            elif agent == self._verifier.name:
+                output_refs = tuple(f"issue:{issue.code}" for issue in issues)
+            else:
+                output_refs = tuple(sorted({finding.code for finding in findings}))
             trace.append(
                 AgentTraceEvent(
                     sequence=len(trace) + 1,
@@ -111,13 +124,7 @@ class InvestigationOrchestrator:
                     status=status,
                     detail=detail,
                     input_refs=input_refs[:30],
-                    output_refs=tuple(
-                        sorted(
-                            {
-                                finding.code for finding in findings
-                            }
-                        )
-                    )[:30],
+                    output_refs=tuple(sorted(set(output_refs)))[:30],
                     elapsed_ms=round((perf_counter() - started) * 1_000, 3),
                 )
             )
@@ -153,9 +160,10 @@ class InvestigationOrchestrator:
             evidence.extend(hit.chunk.to_evidence_record() for hit in hits)
 
         def run_synthesis() -> None:
-            nonlocal hypotheses, model_assisted, synthesis_detail
+            nonlocal hypotheses, model_assisted, synthesis_detail, model_calls
             available_evidence = tuple(evidence)
-            if self._model_agent is not None:
+            if self._model_agent is not None and model_calls < self._budget.max_model_calls:
+                model_calls += 1
                 try:
                     hypotheses = self._model_agent.run(
                         case,
@@ -186,6 +194,15 @@ class InvestigationOrchestrator:
                         "Model output failed the structured/evidence contract; "
                         "deterministic synthesis was used as a safe fallback."
                     )
+            elif self._model_agent is not None:
+                issues.append(
+                    VerificationIssue(
+                        code="MODEL_HYPOTHESIS_BUDGET_EXHAUSTED",
+                        severity=Severity.WARNING,
+                        summary="The per-investigation model-call budget prevented hypothesis generation.",
+                    )
+                )
+                synthesis_detail = "Model hypothesis generation skipped because the model-call budget was exhausted."
 
             hypotheses = self._deterministic_hypothesis_agent.run(
                 case,
@@ -195,6 +212,51 @@ class InvestigationOrchestrator:
                 affected_nodes,
                 max_hypotheses=self._budget.max_hypotheses,
             )
+
+        def run_review() -> None:
+            nonlocal hypotheses, model_reviewed, model_calls, review_detail
+            if not hypotheses:
+                review_detail = "No hypotheses were produced; model review was skipped."
+                return
+            if self._review_agent is None:
+                return
+            if model_calls >= self._budget.max_model_calls:
+                issues.append(
+                    VerificationIssue(
+                        code="MODEL_REVIEW_BUDGET_EXHAUSTED",
+                        severity=Severity.WARNING,
+                        summary="The per-investigation model-call budget prevented counter-evidence review.",
+                    )
+                )
+                review_detail = "Model review skipped because the model-call budget was exhausted."
+                return
+
+            model_calls += 1
+            try:
+                hypotheses = self._review_agent.run(
+                    case, hypotheses, tuple(evidence), budget=self._budget
+                )
+            except ModelReviewError as exc:
+                issues.append(
+                    VerificationIssue(
+                        code="MODEL_REVIEW_FALLBACK",
+                        severity=Severity.WARNING,
+                        summary=(
+                            "Model review output was rejected; pre-review hypotheses were "
+                            f"preserved ({type(exc).__name__})."
+                        ),
+                    )
+                )
+                review_detail = (
+                    "Model review failed its structured/evidence contract; prior hypotheses "
+                    "were preserved for the deterministic verifier."
+                )
+            else:
+                model_reviewed = True
+                review_detail = (
+                    f"Independent model reviewer examined {len(hypotheses)} hypothesis(es); "
+                    "review decisions remain advisory."
+                )
 
         plan: tuple[tuple[str, str, str, Callable[[], None], tuple[str, ...]], ...] = (
             (
@@ -241,6 +303,18 @@ class InvestigationOrchestrator:
             ),
         )
 
+        if self._review_agent is not None:
+            plan = (
+                *plan,
+                (
+                    self._review_agent.name,
+                    "review-counterevidence",
+                    review_detail,
+                    run_review,
+                    (case.case_id,),
+                ),
+            )
+
         regular_step_limit = self._budget.max_agent_steps - 1
         for agent, action, detail, operation, input_refs in plan:
             if executed_steps >= regular_step_limit:
@@ -259,11 +333,12 @@ class InvestigationOrchestrator:
                     )
                 )
                 break
-            detail_provider = (
-                (lambda: synthesis_detail)
-                if agent == "hypothesis-synthesis-agent"
-                else None
-            )
+            if agent == "hypothesis-synthesis-agent":
+                detail_provider = lambda: synthesis_detail
+            elif agent == "model-counterevidence-reviewer":
+                detail_provider = lambda: review_detail
+            else:
+                detail_provider = None
             execute(
                 agent=agent,
                 action=action,
@@ -330,5 +405,7 @@ class InvestigationOrchestrator:
             affected_nodes=affected_nodes,
             trace=tuple(trace),
             model_assisted=model_assisted,
+            model_reviewed=model_reviewed,
+            model_calls=model_calls,
             budget_exhausted=budget_exhausted,
         )
