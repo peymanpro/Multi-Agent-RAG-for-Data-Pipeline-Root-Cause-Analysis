@@ -90,7 +90,7 @@ def test_valid_model_hypothesis_is_accepted_with_allowed_evidence() -> None:
     assert result[0].status == HypothesisStatus.SUPPORTED
     assert result[0].confidence == pytest.approx(0.83)
     assert result[0].supporting_evidence_ids == ("ev-schema-1",)
-    assert "not a calibrated probability" in result[0].rationale
+    assert "confidence is not calibrated" in result[0].rationale
     assert model.calls == 1
     assert "untrusted incident data" in model.last_system_prompt
     assert "ev-schema-1" in model.last_user_prompt
