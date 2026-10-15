@@ -8,7 +8,7 @@
 
 ## Project status
 
-**Stage: deterministic core implemented; benchmark v1 in development.** The project is built incrementally from a documented problem definition toward a tested, reproducible release. A feature is considered implemented only after its code, tests, and evidence are committed. Release badges and planned capabilities do not imply that later phases already exist.
+**Stage: deterministic diagnostics, synthetic benchmark v1, lexical retrieval, and bounded multi-agent investigation are implemented on the current feature branch; release automation is still pending.** The default path runs offline; model-assisted generation and review are explicit opt-ins. A feature is considered complete only after CI and its acceptance tests pass.
 
 ## Problem
 
@@ -72,9 +72,9 @@ Incident / User Question
  Cited Incident Report + Evaluation Trace
 ```
 
-This is the target design, not a claim that all components have already been implemented.
+This diagram represents the implemented investigation path. Dense semantic retrieval, a hosted HTTP API, and production integrations remain separate future work.
 
-## Planned repository layout
+## Repository layout
 
 ```text
 src/
@@ -97,7 +97,7 @@ docs/
   roadmap.md
 ```
 
-The final package layout may change when implementation evidence justifies it; public interfaces and architectural decisions will be documented.
+The repository now separates domain contracts, deterministic diagnostics, local retrieval, agent orchestration, benchmark evaluation, and integration/unit tests. Frameworks and hosted dependencies are added only behind explicit boundaries.
 
 ## Benchmark strategy
 
@@ -116,12 +116,14 @@ The initial implementation targets Python 3.12+, typed domain models, pytest, Ru
 
 - [x] **P0 — Charter and benchmark specification:** problem boundary, scenario schema, leakage controls, and evaluation protocol documented.
 - [x] **P1 — Deterministic investigation core:** typed evidence, incident cases, schema/freshness/duplicate/row-count checks, lineage traversal, CLI, and unit tests.
-- [ ] **P2 — Reproducible synthetic benchmark:** fault injection, hidden ground truth, baseline runner, and machine-readable reports.
-- [ ] **P3 — Evidence retrieval:** structure-aware ingestion, lexical/hybrid retrieval interfaces, source provenance, and citation checks.
-- [ ] **P4 — Bounded multi-agent workflow:** task contracts, routing, budgets, timeouts, recovery, and traceable evidence hand-offs.
+- [x] **P2 — Reproducible synthetic benchmark v1:** seven versioned scenarios, separated runtime/evaluator files, metrics, CLI, and integration tests.
+- [x] **P3 — Evidence retrieval baseline:** local Markdown ingestion, structure-aware chunking, deterministic BM25, stable source references, five runbooks, and tests.
+- [x] **P4 — Bounded multi-agent workflow:** specialist diagnostics, optional model-based hypothesis generation and counter-evidence review, budgets, trace, fallback, and final citation-reference verification (pending merge/CI on the feature branch).
 - [ ] **P5 — Evaluation and security:** RAG-only and single-agent comparisons, adversarial inputs, abstention tests, and regression gates.
 - [ ] **P6 — API and operational quality:** API contracts, containerized local run, observability, and reproducible examples.
-- [ ] **P7 — Release engineering:** CI, automated version validation, release notes/artifacts, and a verified GitHub Release.
+- [ ] **P5 — Evaluation and security:** retrieval relevance benchmark, agent-vs-baseline comparison, prompt-injection and abstention cases.
+- [ ] **P6 — API and operational quality:** optional HTTP API, containerized local run, observability, and integration examples.
+- [ ] **P7 — Release engineering:** automated version validation, package artifacts, release notes, and a verified GitHub Release.
 
 ## Run the current deterministic core
 
@@ -141,7 +143,31 @@ pipeline-rca examples/cases/schema-drift.json
 # or: python -m pipeline_rca examples/cases/schema-drift.json
 ```
 
-Freshness checks intentionally require an explicit timezone-aware `--as-of` timestamp so results do not silently depend on the machine clock. The current CLI runs deterministic diagnostics only; it does not yet invoke a language model or claim a confirmed causal root cause.
+Freshness checks intentionally require an explicit timezone-aware `--as-of` timestamp so results do not silently depend on the machine clock. The `pipeline-rca` command exposes the original deterministic diagnostic baseline; `pipeline-rca-investigate` runs the bounded specialist workflow.
+
+## Run a bounded multi-agent investigation
+
+Install the package and development tools:
+
+    python -m pip install -e ".[dev]"
+    pytest -q
+    ruff check .
+    mypy
+
+Run offline; no model key or network is required:
+
+    pipeline-rca-investigate examples/cases/schema-drift.json
+
+Include deterministic freshness analysis with an explicit timestamp:
+
+    pipeline-rca-investigate examples/cases/schema-drift.json --as-of 2026-10-15T10:05:00Z
+
+Opt in to two bounded model calls (hypothesis generation and independent counter-evidence review):
+
+    # configure RCA_API_KEY, RCA_MODEL, and optionally RCA_API_BASE_URL in the environment
+    pipeline-rca-investigate examples/cases/schema-drift.json --with-model
+
+The report separates incident observations from runbook context, includes agent trace and verification issues, and marks confidence as uncalibrated. Invalid model output falls back to deterministic synthesis; the final evidence-reference verifier runs even when model use is enabled. This is an investigation assistant, not an autonomous remediation tool. See [agent orchestration design](docs/agent-orchestration.md).
 
 ## Run the deterministic benchmark
 
@@ -172,8 +198,10 @@ The first retrieval baseline is BM25. It does not need a hosted embedding servic
 
 ## Architecture and benchmark contracts
 
-- [Architecture](docs/architecture.md) — layer boundaries, evidence flow, budgets, failure handling, and security constraints.
-- [Benchmark design](docs/benchmark-design.md) — scenario contract, ground-truth leakage controls, metrics, comparison protocol, and release gate.
+- [Architecture](docs/architecture.md) — deterministic core, evidence flow, budgets, failure handling, and security constraints.
+- [Agent orchestration](docs/agent-orchestration.md) — specialist roles, model boundary, counter-evidence review, trace, and limitations.
+- [Retrieval design](docs/retrieval.md) — chunking, BM25, provenance, and retrieval limitations.
+- [Benchmark design](docs/benchmark-design.md) — scenario contract, ground-truth separation, metrics, and release gate.
 - [Contributing](CONTRIBUTING.md) — small changes, verification expectations, and review workflow.
 
 ## Contributing and quality gates
