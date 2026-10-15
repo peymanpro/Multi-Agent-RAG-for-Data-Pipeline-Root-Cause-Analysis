@@ -73,9 +73,9 @@ def chunk_document(document: Document, *, max_chars: int = 900) -> tuple[Documen
 
     for line_number, line in enumerate(lines, start=1):
         stripped = line.strip()
-        fence_match = re.match(r"^([\`]{3,}|~{3,})", stripped)
-        if fence_match:
-            marker = fence_match.group(1)[0]
+        is_fence = stripped.startswith(chr(96) * 3) or stripped.startswith("~~~")
+        if is_fence:
+            marker = stripped[0]
             if fence_char is None:
                 fence_char = marker
             elif marker == fence_char:
