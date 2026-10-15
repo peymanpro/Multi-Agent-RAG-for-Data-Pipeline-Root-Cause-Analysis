@@ -1,0 +1,45 @@
+{
+  "case_id": "example-schema-drift-001",
+  "question": "Why did the order transformation stop producing customer identifiers?",
+  "schemas": [
+    {
+      "dataset": "staging.orders",
+      "columns": ["order_id", "customer_ref", "amount"],
+      "required_columns": ["order_id", "customer_id", "amount"],
+      "schema_version": "source-v2",
+      "evidence_id": "schema-snapshot-orders-v2"
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "transform_orders",
+      "status": "failed",
+      "run_id": "run-2026-10-15-001",
+      "message": "Required field customer_id was not found",
+      "evidence_id": "task-run-transform-orders"
+    }
+  ],
+  "lineage": [
+    {"upstream": "extract_orders", "downstream": "transform_orders"},
+    {"upstream": "transform_orders", "downstream": "fact_orders"},
+    {"upstream": "fact_orders", "downstream": "sales_report"}
+  ],
+  "evidence": [
+    {
+      "evidence_id": "schema-snapshot-orders-v2",
+      "source": "schema-registry",
+      "locator": "staging.orders@source-v2",
+      "summary": "The upstream schema contains customer_ref instead of customer_id.",
+      "kind": "schema_snapshot",
+      "observed_at": "2026-10-15T09:55:00Z"
+    },
+    {
+      "evidence_id": "task-run-transform-orders",
+      "source": "workflow-log",
+      "locator": "run-2026-10-15-001/transform_orders",
+      "summary": "The transformation failed because the required customer_id field was not found.",
+      "kind": "task_run",
+      "observed_at": "2026-10-15T10:00:00Z"
+    }
+  ]
+}
