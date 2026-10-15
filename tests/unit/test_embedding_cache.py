@@ -137,7 +137,10 @@ def test_invalid_provider_vector_is_not_persisted(tmp_path: Path) -> None:
     with pytest.raises(EmbeddingProviderError, match="invalid vector"):
         cached.embed_texts(("a valid input",))
 
-    assert not cache_path.exists()
+    assert cache_path.is_file()
+    with sqlite3.connect(cache_path) as connection:
+        row_count = connection.execute("SELECT COUNT(*) FROM embedding_cache").fetchone()[0]
+    assert row_count == 0
 
 
 def test_cache_storage_failure_returns_safe_error(tmp_path: Path) -> None:
