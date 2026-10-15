@@ -17,6 +17,26 @@ CASE_PATH = ROOT / "examples" / "cases" / "schema-drift.json"
 RUNBOOK_PATH = ROOT / "data" / "runbooks"
 
 
+class SequenceChatModel(FakeChatModel):
+    def __init__(self, responses: list[str]) -> None:
+        super().__init__("")
+        self.responses = responses
+
+    def complete(
+        self,
+        *,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int = 1_000,
+    ) -> str:
+        assert system_prompt
+        assert user_prompt
+        assert temperature == 0.0
+        assert max_tokens == 1_000
+        return self.responses.pop(0)
+
+
 class FakeChatModel:
     def __init__(self, response: str) -> None:
         self.response = response
@@ -106,9 +126,25 @@ def test_valid_model_output_is_still_checked_by_the_final_verifier() -> None:
             ]
         }
     )
-    result = InvestigationOrchestrator(model=FakeChatModel(response)).run(_load_case())
+    review = json.dumps(
+        {
+            "reviews": [
+                {
+                    "fault_class": "schema_drift",
+                    "decision": "retain",
+                    "counter_evidence_ids": [],
+                    "rationale": "The observed source schema supports the proposed explanation.",
+                }
+            ]
+        }
+    )
+    result = InvestigationOrchestrator(
+        model=SequenceChatModel([response, review])
+    ).run(_load_case())
 
     assert result.model_assisted is True
+    assert result.model_reviewed is True
+    assert result.model_calls == 2
     assert result.hypotheses[0].confidence == pytest.approx(0.82)
     assert result.hypotheses[0].status.value == "supported"
     assert not result.verification_issues
@@ -142,4 +178,7 @@ def test_report_serialization_marks_confidence_as_uncalibrated() -> None:
     assert report["case_id"] == "example-schema-drift-001"
     assert report["hypotheses"]
     assert report["hypotheses"][0]["confidence_is_calibrated"] is False
+    assert report["model_assisted"] is False
+    assert report["model_reviewed"] is False
+    assert report["model_calls"] == 0
     assert report["trace"][-1]["agent"] == "evidence-verifier-agent"
