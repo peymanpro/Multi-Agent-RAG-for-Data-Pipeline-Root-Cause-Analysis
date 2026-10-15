@@ -17,6 +17,12 @@ _REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 _LOGGER_NAME = "pipeline_rca.telemetry"
 
 
+class JsonLineHandler(logging.StreamHandler):
+    """Stream handler identifiable without untyped custom LogRecord attributes."""
+
+    _pipeline_rca_json = True
+
+
 class JsonLineFormatter(logging.Formatter):
     """Render telemetry log records as one JSON object per line."""
 
@@ -32,10 +38,9 @@ def configure_telemetry_logging() -> logging.Logger:
     logger = logging.getLogger(_LOGGER_NAME)
     logger.setLevel(logging.INFO)
     logger.propagate = False
-    if not any(getattr(handler, "_pipeline_rca_json", False) for handler in logger.handlers):
-        handler = logging.StreamHandler(sys.stdout)
+    if not any(isinstance(handler, JsonLineHandler) for handler in logger.handlers):
+        handler = JsonLineHandler(sys.stdout)
         handler.setFormatter(JsonLineFormatter())
-        handler._pipeline_rca_json = True
         logger.addHandler(handler)
     return logger
 
