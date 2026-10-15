@@ -150,7 +150,7 @@ def test_cache_storage_failure_returns_safe_error(tmp_path: Path) -> None:
     cache_path.mkdir()
     cached = _cache(CountingProvider(), cache_path)
 
-    with pytest.raises(EmbeddingCacheError, match="embedding cache read failed"):
+    with pytest.raises(EmbeddingCacheError, match="embedding cache file preparation failed"):
         cached.embed_texts(("cache storage unavailable",))
 
 
