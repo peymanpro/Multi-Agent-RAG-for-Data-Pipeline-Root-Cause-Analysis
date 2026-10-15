@@ -123,6 +123,12 @@ The initial implementation targets Python 3.12+, typed domain models, pytest, Ru
 - [ ] **P6 — API and operational quality:** API contracts, containerized local run, observability, and reproducible examples.
 - [ ] **P7 — Release engineering:** CI, automated version validation, release notes/artifacts, and a verified GitHub Release.
 
+## Architecture and benchmark contracts
+
+- [Architecture](docs/architecture.md) — layer boundaries, evidence flow, budgets, failure handling, and security constraints.
+- [Benchmark design](docs/benchmark-design.md) — scenario contract, ground-truth leakage controls, metrics, comparison protocol, and release gate.
+- [Contributing](CONTRIBUTING.md) — small changes, verification expectations, and review workflow.
+
 ## Contributing and quality gates
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow. Changes should be small, tested, and documented. Do not claim support for an integration, benchmark result, or production guarantee without an executable test or reproducible artifact.
