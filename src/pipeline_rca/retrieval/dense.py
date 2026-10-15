@@ -9,7 +9,9 @@ from pipeline_rca.retrieval.embeddings import EmbeddingProvider
 from pipeline_rca.retrieval.models import DocumentChunk, RetrievalHit
 
 
-def _validated_vector(values: Sequence[float], *, dimension: int | None = None) -> tuple[float, ...]:
+def _validated_vector(
+    values: Sequence[float], *, dimension: int | None = None
+) -> tuple[float, ...]:
     if not values:
         raise ValueError("embedding vectors must not be empty")
     parsed: list[float] = []
