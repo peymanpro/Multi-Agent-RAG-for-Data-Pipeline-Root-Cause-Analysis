@@ -77,7 +77,7 @@ def create_app(*, runbooks_dir: str | Path | None = None) -> FastAPI:
         """Return process liveness without depending on retrieval availability."""
         return {"status": "ok"}
 
-    @application.get("/health/ready", tags=["health"])
+    @application.get("/health/ready", tags=["health"], response_model=None)
     def ready() -> dict[str, str | int | bool] | JSONResponse:
         """Report whether the configured read-only runbook corpus is available."""
         current_corpus: MarkdownCorpus | None = application.state.runbook_corpus
