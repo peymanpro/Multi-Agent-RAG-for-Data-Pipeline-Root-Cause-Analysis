@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
 
-from pipeline_rca.evaluation.retrieval_benchmark import run_retrieval_benchmark
-
 import pytest
+
+from pipeline_rca.evaluation.retrieval_benchmark import run_retrieval_benchmark
 
 
 ROOT = Path(__file__).resolve().parents[2]
