@@ -14,6 +14,7 @@ The regression tests under `tests/security/` verify these structural boundaries 
 - Runbook content is labeled in the distinct `runbook_context` collection for hypothesis generation.
 - The counter-evidence reviewer receives only incident observation evidence, not retrieved runbook text.
 - Model output remains subject to strict JSON/schema checks and evidence-ID validation after the model call.
+- Before a report is returned, diagnostic findings retain only references that resolve to one unambiguous incident-observation record. Missing, colliding, and runbook-only references are removed from the finding; verification issues still record the problem.
 
 ## What the tests do not establish
 
