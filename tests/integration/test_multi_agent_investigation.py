@@ -7,7 +7,7 @@ import pytest
 from pipeline_rca.agents.models import AgentBudget, InvestigationStatus
 from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
 from pipeline_rca.agents.reporting import result_to_dict
-from pipeline_rca.models import IncidentCase
+from pipeline_rca.models import IncidentCase, SchemaSnapshot
 from pipeline_rca.retrieval.corpus import MarkdownCorpus
 from pipeline_rca.serialization import incident_case_from_mapping
 
@@ -181,3 +181,31 @@ def test_report_serialization_marks_confidence_as_uncalibrated() -> None:
     assert report["model_reviewed"] is False
     assert report["model_calls"] == 0
     assert report["trace"][-1]["agent"] == "evidence-verifier-agent"
+
+
+
+def test_final_report_strips_unresolved_diagnostic_evidence_references() -> None:
+    case = IncidentCase(
+        case_id="dangling-finding-reference",
+        question="Investigate the schema mismatch.",
+        schemas=(
+            SchemaSnapshot(
+                dataset="orders",
+                columns=(),
+                required_columns=("customer_id",),
+                evidence_id="missing-schema-evidence",
+            ),
+        ),
+    )
+
+    result = InvestigationOrchestrator().run(case)
+
+    finding = next(
+        item for item in result.diagnostics if item.code == "SCHEMA_REQUIRED_COLUMN_MISSING"
+    )
+    assert finding.evidence_ids == ()
+    assert any(
+        issue.code == "FINDING_EVIDENCE_UNRESOLVED"
+        and issue.evidence_ids == ("missing-schema-evidence",)
+        for issue in result.verification_issues
+    )
