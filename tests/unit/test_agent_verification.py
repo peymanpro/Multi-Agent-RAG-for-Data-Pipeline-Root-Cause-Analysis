@@ -75,8 +75,13 @@ def test_conflicting_records_with_same_id_are_reported() -> None:
 
 def test_finding_sanitization_keeps_only_unambiguous_observation_references() -> None:
     evidence = (
-        EvidenceRecord("valid-observation", "schema", "orders/v2", "Observed schema.", "schema_snapshot"),
-        EvidenceRecord("runbook-only", "file:runbook.md", "lines:1-2", "General guidance.", "retrieved_document_chunk"),
+        EvidenceRecord(
+            "valid-observation", "schema", "orders/v2", "Observed schema.", "schema_snapshot"
+        ),
+        EvidenceRecord(
+            "runbook-only", "file:runbook.md", "lines:1-2", "General guidance.",
+            "retrieved_document_chunk",
+        ),
         EvidenceRecord("collision", "source-a", "loc", "first", "task_run"),
         EvidenceRecord("collision", "source-b", "loc", "second", "task_run"),
     )
