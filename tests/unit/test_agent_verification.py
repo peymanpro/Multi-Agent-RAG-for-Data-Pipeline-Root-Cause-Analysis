@@ -70,3 +70,29 @@ def test_conflicting_records_with_same_id_are_reported() -> None:
     _, issues = EvidenceVerifierAgent().verify((), (), evidence)
 
     assert any(issue.code == "EVIDENCE_ID_COLLISION" for issue in issues)
+
+
+
+def test_finding_sanitization_keeps_only_unambiguous_observation_references() -> None:
+    evidence = (
+        EvidenceRecord(
+            "valid-observation", "schema", "orders/v2", "Observed schema.", "schema_snapshot"
+        ),
+        EvidenceRecord(
+            "runbook-only", "file:runbook.md", "lines:1-2", "General guidance.",
+            "retrieved_document_chunk",
+        ),
+        EvidenceRecord("collision", "source-a", "loc", "first", "task_run"),
+        EvidenceRecord("collision", "source-b", "loc", "second", "task_run"),
+    )
+    finding = DiagnosticFinding(
+        code="TEST_FINDING",
+        fault_class=FaultClass.SCHEMA_DRIFT,
+        severity=Severity.ERROR,
+        summary="A finding with mixed-quality references.",
+        evidence_ids=("valid-observation", "missing-id", "runbook-only", "collision"),
+    )
+
+    sanitized = EvidenceVerifierAgent().sanitize_finding_references((finding,), evidence)
+
+    assert sanitized[0].evidence_ids == ("valid-observation",)

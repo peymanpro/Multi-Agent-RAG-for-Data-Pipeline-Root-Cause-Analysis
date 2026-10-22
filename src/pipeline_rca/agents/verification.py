@@ -26,6 +26,40 @@ class EvidenceVerifierAgent:
 
     name = "evidence-verifier-agent"
 
+    def sanitize_finding_references(
+        self,
+        findings: tuple[DiagnosticFinding, ...],
+        evidence: tuple[EvidenceRecord, ...],
+    ) -> tuple[DiagnosticFinding, ...]:
+        """Remove finding references that are missing, ambiguous, or runbook-only."""
+        by_id: dict[str, EvidenceRecord] = {}
+        colliding_ids: set[str] = set()
+        for item in evidence:
+            existing = by_id.get(item.evidence_id)
+            if existing is None:
+                by_id[item.evidence_id] = item
+            elif existing != item:
+                colliding_ids.add(item.evidence_id)
+
+        observation_ids = {
+            evidence_id
+            for evidence_id, item in by_id.items()
+            if item.kind != "retrieved_document_chunk" and evidence_id not in colliding_ids
+        }
+        return tuple(
+            replace(
+                finding,
+                evidence_ids=tuple(
+                    dict.fromkeys(
+                        evidence_id
+                        for evidence_id in finding.evidence_ids
+                        if evidence_id in observation_ids
+                    )
+                ),
+            )
+            for finding in findings
+        )
+
     def verify(
         self,
         findings: tuple[DiagnosticFinding, ...],

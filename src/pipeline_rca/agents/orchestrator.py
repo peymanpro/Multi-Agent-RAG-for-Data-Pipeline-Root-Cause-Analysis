@@ -384,6 +384,9 @@ class InvestigationOrchestrator:
             operation=verify_output,
             input_refs=(case.case_id,),
         )
+        findings[:] = self._verifier.sanitize_finding_references(
+            tuple(findings), tuple(evidence)
+        )
         if not verified:
             verified_hypotheses = tuple(
                 RootCauseHypothesis(
