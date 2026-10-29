@@ -1,0 +1,12 @@
+{
+  "case_id": "compound-failure-001",
+  "expected_fault_classes": [
+    "duplicate_records",
+    "schema_drift"
+  ],
+  "expected_finding_codes": [
+    "DATASET_DUPLICATE_KEYS",
+    "SCHEMA_REQUIRED_COLUMN_MISSING"
+  ],
+  "expected_affected_nodes": []
+}

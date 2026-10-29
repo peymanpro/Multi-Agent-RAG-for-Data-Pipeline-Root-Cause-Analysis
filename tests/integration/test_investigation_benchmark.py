@@ -13,9 +13,9 @@ RUNBOOKS = ROOT / "data" / "runbooks"
 def test_investigation_benchmark_compares_offline_baselines() -> None:
     report = run_investigation_benchmark(BENCHMARK, RUNBOOKS)
 
-    assert report["benchmark_version"] == "1.0.0"
+    assert report["benchmark_version"] == "1.1.0"
     assert report["runtime_mode"] == "offline_deterministic_multi_agent"
-    assert report["case_count"] == 7
+    assert report["case_count"] == 9
     assert report["root_cause"]["baseline"]["top_1_accuracy_on_positive_cases"] == 1.0
     assert report["root_cause"]["multiagent"]["top_1_accuracy_on_positive_cases"] == 1.0
     assert report["root_cause"]["multiagent"]["clean_case_abstention_rate"] == 1.0
@@ -27,6 +27,21 @@ def test_investigation_benchmark_compares_offline_baselines() -> None:
     )
     assert all(case["baseline_seconds"] >= 0 for case in report["cases"])
     assert all(case["multiagent_seconds"] >= 0 for case in report["cases"])
+
+    cases = {case["case_id"]: case for case in report["cases"]}
+    compound = cases["compound-failure-001"]
+    assert set(compound["expected_fault_classes"]) == {
+        "duplicate_records",
+        "schema_drift",
+    }
+    assert set(compound["multiagent_ranked_fault_classes"]) >= {
+        "duplicate_records",
+        "schema_drift",
+    }
+    insufficient = cases["insufficient-evidence-001"]
+    assert insufficient["expected_fault_classes"] == []
+    assert insufficient["multiagent_ranked_fault_classes"] == []
+    assert insufficient["abstained"] is True
 
 
 def test_runtime_input_cannot_smuggle_evaluator_labels(tmp_path: Path) -> None:
