@@ -105,3 +105,47 @@ def test_manifest_rejects_paths_outside_benchmark_root(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="escapes the benchmark directory"):
         run_investigation_benchmark(tmp_path, RUNBOOKS)
+
+
+
+class EmptyHypothesisModel:
+    """Return valid empty hypotheses to exercise optional model-evaluation plumbing."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def complete(
+        self,
+        *,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int = 1_000,
+    ) -> str:
+        assert system_prompt
+        assert user_prompt
+        assert temperature == 0.0
+        assert max_tokens > 0
+        self.calls += 1
+        return '{"hypotheses": []}'
+
+
+def test_investigation_benchmark_supports_optional_model_adapter() -> None:
+    model = EmptyHypothesisModel()
+    report = run_investigation_benchmark(
+        BENCHMARK,
+        RUNBOOKS,
+        model=model,
+        model_name="test-chat-model",
+    )
+
+    assert report["runtime_mode"] == "model_assisted_multi_agent"
+    evaluation = report["model_evaluation"]
+    assert evaluation["enabled"] is True
+    assert evaluation["model_name"] == "test-chat-model"
+    assert evaluation["total_model_calls"] == model.calls
+    assert evaluation["total_model_calls"] > 0
+    assert evaluation["provider_usage_available"] is False
+    assert evaluation["provider_cost_usd"] is None
+    assert "usage metadata" in evaluation["cost_note"]
+    assert all("model_calls" in case for case in report["cases"])

@@ -82,7 +82,7 @@ Metrics are reported per case first, then aggregated. Missing or invalid outputs
 - **Cost:** recorded provider usage or a clearly labeled estimate when provider usage data is unavailable.
 - **Operational reliability:** malformed outputs, timeouts, budget overruns, and unhandled errors.
 
-The v1 runner reports micro-averaged fault-class detection, finding-code detection, affected-node detection, evidence-reference validity, and per-case runtime. Future agent baselines must additionally report ranked root-cause accuracy, abstention quality, latency, and cost where applicable. Metrics must define their denominator and behavior for ties, abstentions, and missing fields. Do not collapse all dimensions into one score unless the weighting is documented and the component metrics remain available.
+The v1 runner reports ranked fault-class metrics, multi-label precision/recall/F1 and exact match, finding-code detection, affected-node detection, evidence-reference validity, and per-case runtime. Future agent baselines must additionally report ranked root-cause accuracy, abstention quality, latency, and cost where applicable. Metrics must define their denominator and behavior for ties, abstentions, and missing fields. Do not collapse all dimensions into one score unless the weighting is documented and the component metrics remain available.
 
 ## Comparison protocol
 
@@ -115,6 +115,12 @@ A benchmark-related release must include:
 Run the separate deterministic-vs-multi-agent evaluator with:
 
     pipeline-rca-evaluate-investigation
+
+The versioned benchmark includes compound-fault and insufficient-evidence cases to exercise multi-label diagnosis and abstention. Ranked top-k metrics are reported alongside full-set multi-label metrics so a case with two expected faults cannot be described as fully correct merely because one fault appears in the ranking. The default run stays offline. To opt into a real OpenAI-compatible chat model, configure `RCA_API_KEY`, `RCA_MODEL`, and optionally `RCA_API_BASE_URL`, then run:
+
+    pipeline-rca-evaluate-investigation --with-model --output evaluation-artifacts/model-investigation-benchmark.json
+
+Model-backed runs are opt-in and can incur provider charges. The report records the requested model name, model calls, model-assisted cases, and measured model-step time. The current `ChatModel` interface does not return provider token-usage metadata, so usage and cost are explicitly left unavailable rather than guessed.
 
 The benchmark runs both the single-pass deterministic diagnostic function and the offline multi-agent orchestrator on the exact same observable case. The evaluator reads the matching truth file only after both predictions are complete. It reports cause-class Top-1/Top-k, MRR, clean-case abstention, finding-code set metrics, affected-node set metrics, incident-vs-runbook citation integrity, and per-case latency. It deliberately does not call a model provider; model-backed systems need a separately budgeted, provider-specific evaluation because outputs and costs are stochastic.
 

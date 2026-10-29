@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
 from time import perf_counter
 from typing import Any
 
+from pipeline_rca.agents.model_gateway import ChatModel, OpenAICompatibleChatModel
 from pipeline_rca.agents.models import AgentBudget
 from pipeline_rca.agents.orchestrator import InvestigationOrchestrator
 from pipeline_rca.agents.reporting import result_to_dict
@@ -236,6 +238,8 @@ def run_investigation_benchmark(
     runbooks_dir: str | Path,
     *,
     top_k: int | None = None,
+    model: ChatModel | None = None,
+    model_name: str | None = None,
 ) -> dict[str, Any]:
     """Run baseline and multi-agent systems without exposing truth to runtime input."""
     root = Path(benchmark_dir).resolve()
@@ -307,6 +311,7 @@ def run_investigation_benchmark(
         started = perf_counter()
         result = InvestigationOrchestrator(
             corpus=corpus,
+            model=model,
             budget=AgentBudget(),
         ).run(case, as_of=as_of)
         multiagent_seconds = perf_counter() - started
@@ -350,6 +355,20 @@ def run_investigation_benchmark(
                 "baseline_seconds": round(baseline_seconds, 6),
                 "multiagent_seconds": round(multiagent_seconds, 6),
                 "hypothesis_count": len(result_dict["hypotheses"]),
+                "model_assisted": result_dict["model_assisted"],
+                "model_reviewed": result_dict["model_reviewed"],
+                "model_calls": result_dict["model_calls"],
+                "model_elapsed_ms": round(
+                    sum(
+                        event["elapsed_ms"]
+                        for event in result_dict["trace"]
+                        if event["agent"]
+                        in {"hypothesis-synthesis-agent", "model-counterevidence-reviewer"}
+                    ),
+                    3,
+                )
+                if model is not None
+                else 0.0,
                 "abstained": not multiagent_ranked,
                 "verification_issue_codes": sorted(
                     {issue["code"] for issue in result_dict["verification_issues"]}
@@ -365,11 +384,38 @@ def run_investigation_benchmark(
     )
     return {
         "benchmark_version": version,
-        "runtime_mode": "offline_deterministic_multi_agent",
+        "runtime_mode": (
+            "model_assisted_multi_agent" if model is not None else "offline_deterministic_multi_agent"
+        ),
+        "model_evaluation": {
+            "enabled": model is not None,
+            "model_name": model_name if model is not None else None,
+            "cases_with_model_assistance": sum(
+                bool(case["model_assisted"]) for case in case_results
+            ),
+            "total_model_calls": sum(int(case["model_calls"]) for case in case_results),
+            "total_model_elapsed_ms": round(
+                sum(float(case["model_elapsed_ms"]) for case in case_results), 3
+            ),
+            "provider_usage_available": False,
+            "provider_cost_usd": None,
+            "cost_note": (
+                "The ChatModel interface returns message text without provider usage "
+                "metadata; token usage and cost are therefore not reported."
+            ),
+        },
         "case_count": len(case_results),
         "root_cause": {
             "baseline": baseline_cause_metrics,
             "multiagent": multiagent_cause_metrics,
+            "multi_label": {
+                "baseline": measure_sets(
+                    expected_classes, [set(items) for items in baseline_predictions]
+                ).to_dict(),
+                "multiagent": measure_sets(
+                    expected_classes, [set(items) for items in multiagent_predictions]
+                ).to_dict(),
+            },
         },
         "finding_code_detection": {
             "baseline": measure_sets(expected_codes, baseline_codes).to_dict(),
@@ -411,11 +457,34 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--benchmark-dir", type=Path, default=Path("data/benchmark/v1"))
     parser.add_argument("--runbooks-dir", type=Path, default=Path("data/runbooks"))
     parser.add_argument("--top-k", type=int, help="override top-k cause metric cutoff")
+    parser.add_argument(
+        "--with-model",
+        action="store_true",
+        help=(
+            "enable optional model-assisted evaluation using RCA_API_KEY, RCA_MODEL, "
+            "and optional RCA_API_BASE_URL; provider requests may incur cost"
+        ),
+    )
+    parser.add_argument(
+        "--model-timeout-seconds",
+        type=float,
+        default=20.0,
+        help="timeout for each model request when --with-model is enabled",
+    )
     parser.add_argument("--output", type=Path, help="optional JSON report output path")
     args = parser.parse_args(argv)
     try:
+        model = (
+            OpenAICompatibleChatModel.from_env(timeout_seconds=args.model_timeout_seconds)
+            if args.with_model
+            else None
+        )
         report = run_investigation_benchmark(
-            args.benchmark_dir, args.runbooks_dir, top_k=args.top_k
+            args.benchmark_dir,
+            args.runbooks_dir,
+            top_k=args.top_k,
+            model=model,
+            model_name=os.environ.get("RCA_MODEL") if model is not None else None,
         )
         rendered = json.dumps(report, indent=2, sort_keys=True) + "\n"
         if args.output:

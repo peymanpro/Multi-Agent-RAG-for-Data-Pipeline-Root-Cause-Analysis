@@ -32,7 +32,7 @@ A model-assisted investigation normally makes at most two model calls: one for h
 
 ## Retrieval mode
 
-The default retrieval mode is offline BM25. The CLI can also opt into lexical+dense hybrid retrieval with `--retrieval-mode hybrid`; this requires `RCA_API_KEY`, `RCA_EMBEDDING_MODEL`, and optionally `RCA_API_BASE_URL`. The hybrid corpus embeds local runbook chunks when it is built, so repeated CLI runs may incur repeated embedding cost because no persistent cache is implemented yet. The final verifier treats retrieved runbooks as context, never as proof of an incident-specific event. See [hybrid retrieval design](hybrid-retrieval.md).
+The default retrieval mode is offline BM25. The CLI can also opt into lexical+dense hybrid retrieval with `--retrieval-mode hybrid`; this requires `RCA_API_KEY`, `RCA_EMBEDDING_MODEL`, and optionally `RCA_API_BASE_URL`. The hybrid corpus uses a persistent content-addressed SQLite embedding cache by default, so unchanged chunks can reuse cached vectors across CLI runs. The dense index is rebuilt in memory, and new or changed chunks or queries can still incur provider cost. See [hybrid retrieval design](hybrid-retrieval.md) for cache keys, isolation, and operational limits. The final verifier treats retrieved runbooks as context, never as proof of an incident-specific event. See [hybrid retrieval design](hybrid-retrieval.md).
 
 ## Model provider configuration
 
