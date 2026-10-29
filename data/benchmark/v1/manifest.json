@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "as_of": "2026-10-15T10:05:00Z",
   "cases": [
     {
@@ -36,6 +36,16 @@
       "case_id": "clean-control-001",
       "input": "cases/clean-control/input.json",
       "truth": "truth/clean-control.json"
+    },
+    {
+      "case_id": "compound-failure-001",
+      "input": "cases/compound-failure/input.json",
+      "truth": "truth/compound-failure.json"
+    },
+    {
+      "case_id": "insufficient-evidence-001",
+      "input": "cases/insufficient-evidence/input.json",
+      "truth": "truth/insufficient-evidence.json"
     }
   ]
 }

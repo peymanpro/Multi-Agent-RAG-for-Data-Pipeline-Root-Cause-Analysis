@@ -1,0 +1,46 @@
+{
+  "case_id": "compound-failure-001",
+  "question": "Investigate the orders dataset: the required customer_id column is absent and the uniqueness check reports repeated order keys. Rank the supported fault classes without assuming one symptom explains the other.",
+  "datasets": [
+    {
+      "dataset": "staging.orders",
+      "row_count": 120,
+      "expected_row_count": 120,
+      "duplicate_key_count": 4,
+      "evidence_id": "ev-compound-quality-001"
+    }
+  ],
+  "schemas": [
+    {
+      "dataset": "staging.orders",
+      "columns": [
+        "order_id",
+        "created_at"
+      ],
+      "required_columns": [
+        "order_id",
+        "customer_id",
+        "created_at"
+      ],
+      "evidence_id": "ev-compound-schema-001"
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "ev-compound-quality-001",
+      "source": "quality-checks",
+      "locator": "staging.orders/unique-order-id",
+      "summary": "The uniqueness check found four duplicate order keys; total row count matches the expected value.",
+      "kind": "quality_check",
+      "observed_at": "2026-10-15T10:05:00Z"
+    },
+    {
+      "evidence_id": "ev-compound-schema-001",
+      "source": "schema-registry",
+      "locator": "staging.orders/schema-v3",
+      "summary": "The observed schema is missing the required customer_id column.",
+      "kind": "schema_snapshot",
+      "observed_at": "2026-10-15T10:05:00Z"
+    }
+  ]
+}

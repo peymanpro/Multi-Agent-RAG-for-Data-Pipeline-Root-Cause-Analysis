@@ -18,7 +18,7 @@ The project evaluates a specific engineering question:
 
 ## Project status
 
-**Latest tagged release: [v0.4.0](https://github.com/peymanpro/Multi-Agent-RAG-for-Data-Pipeline-Root-Cause-Analysis/releases/tag/v0.4.0).** The release contains a Python wheel, source distribution, diagnostic/retrieval/investigation benchmark reports, and SHA-256 checksums. The `main` branch includes subsequent source fixes; consult the tagged release when you need the exact contents of the published `v0.4.0` artifacts.
+**Latest tagged release: [v0.5.0](https://github.com/peymanpro/Multi-Agent-RAG-for-Data-Pipeline-Root-Cause-Analysis/releases/tag/v0.5.0).** The release contains a Python wheel, source distribution, diagnostic/retrieval/investigation benchmark reports, and SHA-256 checksums. The offline investigation benchmark includes compound-fault and insufficient-evidence cases; optional model-backed evaluation is available separately.
 
 The default diagnostic and lexical-retrieval paths run locally without model credentials. Hosted chat and embedding calls are opt-in. The optional HTTP API is read-only; Airflow, dbt, and OpenLineage integrations normalize source metadata rather than triggering jobs or changing data.
 
@@ -142,15 +142,18 @@ pipeline-rca-benchmark --output artifacts/diagnostic-benchmark.json
 # Retrieval relevance
 pipeline-rca-evaluate-retrieval --output artifacts/retrieval-benchmark.json
 
-# Deterministic versus bounded investigation
+# Deterministic versus bounded investigation (offline; no provider calls)
 pipeline-rca-evaluate-investigation --output artifacts/investigation-benchmark.json
+
+# Optional model-backed evaluation (requires RCA_API_KEY and RCA_MODEL; may incur provider cost)
+pipeline-rca-evaluate-investigation --with-model --output artifacts/model-investigation-benchmark.json
 ```
 
 - **Diagnostic benchmark:** evaluates injected fault classes, finding codes, affected nodes, evidence-reference validity, and per-case runtime.
 - **Retrieval benchmark:** reports document-level Precision@k, Recall@k, Hit@k, MRR, and nDCG@k against hand-judged relevance for the included runbook corpus.
-- **Investigation evaluation:** compares the deterministic diagnostic baseline with the multi-agent orchestrator and reports root-cause class Top-1/Top-k, MRR, clean-case abstention, finding/node detection, evidence integrity, and per-case timing.
+- **Investigation evaluation:** compares the deterministic diagnostic baseline with the multi-agent orchestrator and reports root-cause Top-1/Top-k, MRR, clean-case abstention, multi-label precision/recall/F1 and exact match, finding/node detection, evidence integrity, and per-case timing.
 
-Runtime inputs are separated from evaluator-only ground truth. The end-to-end evaluation runs both execution paths before loading evaluator labels. These benchmarks use synthetic cases and hand-authored relevance judgments; the results do **not** establish production incident accuracy or prove that an LLM improves root-cause identification on real data. See [benchmark design](docs/benchmark-design.md) for the protocols, metrics, leakage controls, and limitations.
+Runtime inputs are separated from evaluator-only ground truth. The end-to-end evaluation runs both execution paths before loading evaluator labels. The versioned incident suite includes compound-fault and insufficient-evidence fixtures to test multi-label diagnosis and abstention. The default benchmark remains offline; `--with-model` opts into actual provider calls and records model name, calls, model-step time, and fallback outcomes. The current chat interface does not expose provider token-usage metadata, so model cost is not calculated. These benchmarks use synthetic cases and hand-authored relevance judgments; the results do **not** establish production incident accuracy or prove that an LLM improves root-cause identification on real data. See [benchmark design](docs/benchmark-design.md) for the protocols, metrics, leakage controls, and limitations.
 
 ## Optional read-only API
 

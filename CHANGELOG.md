@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.5.0] — 2026-10-30
+
+### Added
+
+- Expanded the versioned investigation benchmark from seven to nine cases with a compound schema-drift/duplicate-record incident and an insufficient-evidence abstention case.
+- Added full-set multi-label precision, recall, F1, and exact-match metrics alongside ranked Top-1/Top-k and reciprocal-rank metrics.
+- Added opt-in model-backed investigation evaluation through `pipeline-rca-evaluate-investigation --with-model`, with per-case model-call counts, model-assisted/reviewed flags, and measured model-step time.
+
+### Improved
+
+- Documented that provider usage and dollar cost are not available from the current `ChatModel` response contract; reports leave those values unavailable rather than estimating them without evidence.
+- Corrected the agent-orchestration documentation to describe the existing persistent SQLite embedding cache accurately.
+- Kept the standard benchmark and CI path offline and independent of provider credentials.
+
+### Limitations
+
+- Incident fixtures remain synthetic and are not a representative production incident dataset.
+- Model-backed evaluation is opt-in, may incur provider charges, and requires `RCA_API_KEY` and `RCA_MODEL`; provider token usage and cost are not reported by the current interface.
+- Evidence-reference integrity is not semantic-entailment proof, and model confidence remains uncalibrated.
+
 All notable changes to this project are documented here.
 
 This project follows semantic versioning. Version tags use the `vMAJOR.MINOR.PATCH` form.

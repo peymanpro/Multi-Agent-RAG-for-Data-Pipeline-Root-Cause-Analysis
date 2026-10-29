@@ -1,0 +1,14 @@
+{
+  "case_id": "insufficient-evidence-001",
+  "question": "The dashboard metric fell yesterday. Is a data-pipeline failure the cause, and if so which component failed?",
+  "evidence": [
+    {
+      "evidence_id": "ev-insufficient-stakeholder-note",
+      "source": "stakeholder-report",
+      "locator": "analytics-review/2026-10-15",
+      "summary": "A stakeholder observed a lower dashboard metric. No task run, schema snapshot, data-quality result, freshness measurement, or lineage evidence was attached.",
+      "kind": "stakeholder_report",
+      "observed_at": "2026-10-15T10:05:00Z"
+    }
+  ]
+}
