@@ -16,6 +16,7 @@ def test_investigation_benchmark_compares_offline_baselines() -> None:
     assert report["benchmark_version"] == "1.1.0"
     assert report["runtime_mode"] == "offline_deterministic_multi_agent"
     assert report["case_count"] == 9
+    assert report["root_cause"]["multi_label"]["multiagent"]["cases"] == 9
     assert report["root_cause"]["baseline"]["top_1_accuracy_on_positive_cases"] == 1.0
     assert report["root_cause"]["multiagent"]["top_1_accuracy_on_positive_cases"] == 1.0
     assert report["root_cause"]["multiagent"]["clean_case_abstention_rate"] == 1.0

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pipeline-rca"
-version = "0.4.0"
+version = "0.5.0"
 description = "Evidence-grounded, bounded root-cause investigation for data pipelines"
 readme = "README.md"
 requires-python = ">=3.12"
