@@ -12,9 +12,9 @@ BENCHMARK = ROOT / "data" / "benchmark" / "v1"
 def test_benchmark_v1_runs_all_cases_with_expected_diagnostics() -> None:
     report = run_benchmark(BENCHMARK)
 
-    assert report["benchmark_version"] == "1.0.0"
+    assert report["benchmark_version"] == "1.1.0"
     assert report["system"] == "deterministic_diagnostics_baseline"
-    assert report["case_count"] == 7
+    assert report["case_count"] == 9
     assert report["metrics"]["fault_class_detection"]["exact_match_rate"] == 1.0
     assert report["metrics"]["finding_code_detection"]["exact_match_rate"] == 1.0
     assert report["metrics"]["affected_node_detection"]["exact_match_rate"] == 1.0
