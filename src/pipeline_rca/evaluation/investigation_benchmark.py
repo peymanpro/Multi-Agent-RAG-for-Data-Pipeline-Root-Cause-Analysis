@@ -385,7 +385,9 @@ def run_investigation_benchmark(
     return {
         "benchmark_version": version,
         "runtime_mode": (
-            "model_assisted_multi_agent" if model is not None else "offline_deterministic_multi_agent"
+            "model_assisted_multi_agent"
+            if model is not None
+            else "offline_deterministic_multi_agent"
         ),
         "model_evaluation": {
             "enabled": model is not None,
